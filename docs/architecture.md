@@ -1,255 +1,89 @@
-# 架构方案
+# 系统架构
 
-状态：**Candidate M 与技术主路径已确认；模型、存储和部署细节仍有 TBD**  
-日期：**2026-08-14**
+## 总体形态
 
-## 1. 架构驱动因素
-
-- P0 要求真实 Email/Password Auth、Google OAuth、fal 和 Stripe Sandbox 集成。
-- Image/Video/Audio 任务可能长时间异步执行。
-- Credits 在重试、并发、Provider 失败和重复 Callback 下必须保持正确。
-- 公开路由需要服务端可读内容和 Route-specific SEO。
-- 采用成熟 TypeScript 工程方案，但不拆分不必要的服务。
-- 隔离测试中的 Stub/Fake 必须与真实 Sandbox/Integration 验收分开。
-
-## 2. 已选技术主路径
-
-| 层              | 选择                            | 状态                                       |
-| --------------- | ------------------------------- | ------------------------------------------ |
-| Web             | Next.js App Router + TypeScript | `Accepted`                                 |
-| 形态            | 模块化单体                      | `Accepted`                                 |
-| Auth / Database | Supabase Auth + PostgreSQL      | `Accepted`                                 |
-| AI              | fal，三个模态各一个模型         | `Accepted with model verification pending` |
-| Payment         | Stripe Hosted Checkout Sandbox  | `Accepted`                                 |
-| Media Storage   | 必要时 Supabase Storage         | `TBD`                                      |
-| Deployment      | Vercel + Supabase 为候选        | `TBD`                                      |
-
-不建立多 Provider 系统。保持清晰 Adapter 边界是为了隔离第三方细节和便于测试，不代表本阶段增加第二 Provider。
-
-## 3. 系统形态
+项目是运行在 Vercel Node.js Runtime 上的 Next.js + TypeScript 模块化单体。浏览器访问公开 Server-rendered 页面或受保护页面；需要认证的命令进入 Route Handler，再由 Domain、Repository 和第三方 Adapter 完成工作。
 
 ```text
 Browser
-  ├─ public SSR/SSG pages
-  ├─ Studio：游客可探索，Generate 前 Auth Gate
-  ├─ authenticated Account / History / Credits
-  └─ Stripe Hosted Checkout redirect
-        │
-Next.js TypeScript Application
-  ├─ App Router / Layout / Metadata
-  ├─ Auth Boundary
-  ├─ Generation Commands / Queries
-  ├─ Credits Domain Service
-  ├─ Stripe Checkout + Webhook Handler
-  ├─ fal Adapter + Webhook / Reconciliation
-  └─ Server-only Repositories
-        │
-Supabase Auth + PostgreSQL ── optional Supabase Storage
-        │
-fal Queue / Webhook       Stripe Sandbox       Google OAuth
+  |-- Public pages, Studio, Auth, Account
+  |-- Quote / Generate / Upload / Checkout commands
+  |-- Stripe Hosted Checkout redirect
+        |
+Next.js App Router
+  |-- page/layout, Metadata, robots, sitemap
+  |-- Auth boundary and Route Handlers
+  |-- Domain rules: generation, credits, auth
+  |-- Repositories and integrations
+        |-- Supabase Auth + PostgreSQL + RLS
+        |-- fal.ai Queue + Webhook
+        `-- Stripe Sandbox + Webhook
 ```
 
-fal 承担长耗时推理。Web App 提交 Job、持久化状态，再通过 Webhook 或有界 Reconciliation 更新结果；Video Generation 不保持一个长时间 HTTP Request。
+## 技术组件
 
-## 4. 项目模块边界
+- Next.js 16 App Router、React 19、严格 TypeScript；
+- Supabase Auth 提供 Email/Password、Google OAuth 和 Cookie Session；PostgreSQL、RLS 与事务 RPC 保存业务数据；
+- fal.ai 官方 Queue Adapter 负责 Text-to-Image、Image-to-Video、Text-to-Speech；
+- Stripe SDK 负责 Test Price 校验、Hosted Checkout、Raw Body Signature Verification 和事件映射；
+- Next Metadata API、`robots.ts`、`sitemap.ts` 和类型化内容负责 SEO；
+- Vercel 提供 Production Node.js 部署。
+
+## 代码边界
 
 ```text
 src/
-  app/                    routes、layouts、metadata、thin handlers
-  features/               页面级 Feature Composition
-  components/             UI Primitives 与 Product Components
-  domain/
-    auth/                 应用授权策略
-    generation/           Task State Machine 与 Modality Contracts
-    credits/              Quote、Reservation、Ledger、Settlement
-    payments/             Payment Domain Mapping
-  integrations/
-    supabase/             Auth / Database / optional Storage
-    fal/                  Provider Adapter
-    stripe/               SDK、Signature Verification、Event Mapping
-  db/                     Schema、Migrations、Repositories
-  content/                经批准的 Landing/Model Typed Content
-  config/                 Server/Client Environment Validation
-tests/
-  unit/ integration/ contract/ e2e/ real-integration/
+  app/             页面、布局、Metadata、Route Handler
+  components/      Header、Footer、Marketing 与通用 UI
+  config/          环境变量和站点配置
+  content/         Marketing、Support、Model 内容
+  db/              Repository、数据库访问、Migration Contract
+  domain/          Auth、Generation、Credits 规则
+  features/        Studio、Auth、Account、Billing 组合
+  integrations/    Supabase、fal、Stripe Adapter
+  lib/              SEO 与共享工具
+supabase/migrations 数据表、RLS、触发器和事务 RPC
+tests/             Playwright E2E
 ```
 
-Route Handler 只负责输入校验、授权和调用 Domain Service，不在路由内实现 Ledger 算术或 fal/Stripe 状态映射。
+Route Handler 只做输入解析、认证和命令编排。余额算术、状态转换、Webhook 映射和第三方 SDK 细节分别位于 Domain、Repository 和 Integration 层。
 
-## 5. 核心数据模型
+## Generation Lifecycle
 
-以下为概念模型，字段名将在 Database 阶段通过 Migration 冻结。
+Generation 从 `draft` 经 `quoted`、`reserving`、`queued`、`processing` 进入 `succeeded`，也可进入 `failed`、`canceled`、`expired` 或 `reconciliation_required`。Quote 与输入参数和不可变价格版本绑定。
 
-| Entity                       | 关键字段 / 用途                                                                                |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| `profiles`                   | 对应 Supabase Auth User，基础展示信息与 Stripe Customer Reference                              |
-| `generation_tasks`           | User、Modality、Model Key、Normalized Input、Status、Quote、Provider Reference、Result、时间戳 |
-| `provider_attempts`          | Provider/Model/Version、External Task ID、Request Hash、State、安全错误分类、实际成本          |
-| `media_assets`               | Owner、Purpose、MIME、Size、Storage/Provider URL、Expiry、安全状态；仅在长期持久化确认后使用   |
-| `price_versions`             | 不可变生效区间、Credits 换算策略                                                               |
-| `model_prices`               | Price Version、Model/Parameter 维度、Credits 与内部成本元数据                                  |
-| `quotes`                     | Parameters Hash、Price Version、用户可见 Credits、Expiry                                       |
-| `credit_accounts`            | User 的可用与预留余额聚合                                                                      |
-| `credit_lots`                | Subscription / Pack 来源与剩余值；两种来源需要确定性消费顺序时使用                             |
-| `credit_reservations`        | Quote/Task、Reserved Amount、Release/Settlement State                                          |
-| `ledger_entries`             | 不可变 Debit/Credit、Amount、Reason、Task/Payment Link、Idempotency Key、Created Time          |
-| `payments` / `subscriptions` | Stripe Customer/Session/Payment/Subscription ID 与可信 Status                                  |
-| `stripe_events`              | 唯一 Stripe Event ID、签名验证后的 Receipt 与 Processing State                                 |
-| `idempotency_records`        | Actor、Operation、Client Key、Request Hash、Durable Result Reference                           |
-| `outbox_events`              | Provider 提交、Webhook 后处理或 Reconciliation 等事务后可靠工作                                |
+提交时服务端校验模态、模型和参数，在一个数据库事务中完成所有权检查、余额检查、任务创建、Credits Reservation、幂等记录和 Outbox 记录。fal Queue 返回 External Task ID 后持久化；Webhook 通过高熵 URL token、Raw Body SHA-256 Receipt 和唯一约束完成回调幂等。Provider 状态未知时进入对账状态，不伪造结果。
 
-Credits 使用最小单位整数保存。Provider 货币成本使用 Decimal/Minor Unit，禁止二进制 Float。
+## Credits
 
-## 6. Generation 状态机
+Credits 使用整数最小单位。当前报价规则为：Text-to-Image 30 Credits；Image-to-Video 5 秒 2,800 Credits、10 秒 5,600 Credits；Text-to-Speech 每 10 个字符 6 Credits，至少收取一组。系统按 Quote 做 Reserve，成功做 Settle，失败或取消做 Compensation，并写入不可变 Ledger。Subscription Lot 优先于 recurring Pack Lot；重复提交只返回既有任务。
 
-```text
-draft
-  → quoted
-  → reserving
-  → queued
-  → processing
-  → succeeded
-  → failed | canceled | expired | reconciliation_required
-```
+## Stripe
 
-规则：
+服务端只允许 `subscription` 和 `recurring_credit_pack` 两个 Test Price，并从 Stripe metadata 读取每期 Credits。Checkout 使用本地 Payment Command 和 Stripe Idempotency Key。Webhook 校验 Raw Body 与签名，按事件创建时间和幂等记录处理 Checkout、Invoice、Subscription 状态；Credits 仅由可信 `invoice.paid` 事件发放。重复或乱序事件不会重复发放或回退较新的状态，Return URL 只读取状态。
 
-- 只有服务端可将 `quoted` 转为 `reserving`。
-- Provider Callback 只能按 Allow-list Transition Table 映射；重复或乱序 Callback 必须幂等。
-- Timeout 不自动等于 Failure；Provider Truth 未知时进入 `reconciliation_required`。
-- `succeeded` 必须在同一可靠边界内具有 Result Reference 和 Settlement Record。
-- 用户取消为 Best Effort；最终用户扣费遵循 fal 已验证的 Billing 语义和批准的用户策略。
+## 数据模型
 
-## 7. Quote、Reserve、Settle、Compensate
+| 数据                                                                      | 用途                                                            |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `profiles`                                                                | Auth User、展示信息和 Stripe Customer 引用                      |
+| `generation_tasks`                                                        | 用户、模态、模型、标准化输入、状态、Quote、Provider/Result 引用 |
+| `provider_attempts`、`provider_webhook_events`                            | 外部任务、回调 Receipt、Hash、重放和成本证据                    |
+| `price_versions`、`model_prices`、`quotes`                                | 版本化报价与参数 Hash                                           |
+| `credit_accounts`、`credit_lots`、`credit_reservations`、`ledger_entries` | 余额、来源 Lot、预留、结算、补偿和审计账本                      |
+| `payments`、`subscriptions`、`stripe_events`                              | Checkout、订阅、支付事件及可信状态                              |
+| `idempotency_records`、`outbox_events`                                    | Durable Command Result 与可靠异步工作                           |
 
-### 提交
+所有业务行按 Auth User 做所有权隔离；Provider External ID、Stripe Event ID、Invoice ID 和幂等键有唯一性约束。
 
-1. 解析并校验 Modality、Model 与 Parameters。
-2. 读取有效且不可变的 `price_version`，创建或返回 Quote。
-3. 一个数据库事务内完成 Ownership/Balance 检查、Task 创建、Credits Reservation 和 Idempotency/Outbox 记录。
-4. 使用本地 Task ID 关联 fal 提交，并持久化 External Task ID。
+## SEO
 
-### 成功
+公开页面使用独立 Metadata、Canonical、Open Graph、单一 H1 和类型化内容。Sitemap 只包含 Home、Features、Models、Pricing、代表性 Landing 和 Support/Legal 页面；Account、Auth Callback、Checkout Return、Studio 和 API 不索引。Organization 与 WebSite JSON-LD 与可见站点内容一致。
 
-1. 验证 Webhook Authenticity，或服务端主动获取 Provider State。
-2. 锁定 Task 与 Reservation。
-3. 记录实际 Provider Units/Cost 和 Result Reference。
-4. 使用提交时快照的 Price Version 结算 Credits。
-5. 释放差额并把 Task 标为 `succeeded`。
+## Security 与 Secret
 
-### 失败或取消
+公开 Supabase URL/Publishable Key 可使用 `NEXT_PUBLIC_` 前缀。Supabase Service Role、fal Key、fal Webhook Token、Stripe Secret 和 Stripe Webhook Secret 只在 Server-only 代码和托管 Secret Store 中使用。OAuth Redirect、Cookie Session、Webhook Signature、Input Validation、RLS 和日志脱敏共同构成边界。生产路径不使用 Mock/Stub 结果。
 
-1. 区分 Terminal 与 Retryable。
-2. 分开记录 Provider 成本和用户扣费。
-3. 按已确认策略释放/调整 Reservation。
-4. 追加 Compensation Ledger Entry，不修改或删除旧 Ledger。
+## 质量分层
 
-零 Credits Job 仍记录 Usage，便于审计真实 Provider 证据。Subscription 与 recurring Pack 同时存在时，按冻结规则确定性消费并在事务中加锁；具体先后顺序在 Credits 阶段根据产品规则写入测试。
-
-## 8. 幂等与并发
-
-- 每个 Generation/Checkout Command 由客户端提供 Idempotency Key。
-- 保存 `(actor, operation, key)`、Request Hash 与 Durable Result；相同 Key 不同 Hash 直接拒绝。
-- Provider External ID 和 Stripe Event ID 唯一。
-- Ledger Entry 使用 Operation/Reason/Task 或 Event Identity 形成唯一约束。
-- Balance/Reservation 更新使用 Row Lock 或 Serializable + Retry 事务。
-- Stripe SDK Idempotency Key 从本地 Payment Command ID 推导。
-- Webhook 只有在 Durable Receipt 成功后才返回 Success，后续处理可安全重试。
-
-## 9. fal 集成边界
-
-```ts
-interface GenerationProvider {
-  submit(request: ProviderSubmission): Promise<ProviderJobReference>;
-  getStatus(externalId: string): Promise<ProviderJobState>;
-  cancel?(externalId: string): Promise<ProviderCancelResult>;
-  verifyWebhook?(rawBody: Uint8Array, headers: Headers): VerifiedProviderEvent;
-}
-```
-
-Adapter 把 fal Vendor State/Error 映射为 Domain State，并单独保存安全的 Vendor Metadata。三个模型 ID 只在小范围验证后进入 Server-only Config。`FAL_KEY` 使用环境变量，不得进入 Client Bundle、Git 或日志。
-
-如果真实调用失败，Task 如实进入失败或待对账状态；生产代码不得返回伪造 Result。Mock/Fixture 仅允许在明确隔离的自动化测试中使用。
-
-## 10. Auth 架构
-
-- 自定义 Register/Login 页面调用 Supabase Auth Email/Password 流程；
-- Google 使用真实 OAuth Client、准确 Callback Allow-list 和 state/nonce 防护；
-- 应用权限以服务端 Session/User 为准，不信任客户端登录标记；
-- Application Rows 引用稳定的 Auth User ID；
-- Supabase Service Role 只在 Server-only 边界使用；
-- Middleware/Server Guard 保护 Account 与所有真实 Generate/Checkout API；
-- Forgot/Reset Password 为 P1，邮箱验证不阻塞 P0。
-
-同邮箱 Account Linking、Session Duration、Logout All Sessions 和 Account Deletion 细节仍为 `TBD`，不自行升级为 P0。
-
-## 11. Stripe 架构
-
-使用 Stripe Hosted Checkout Sessions in **Sandbox**，包含一个 Subscription 和一个 recurring Credit Pack。
-
-流程：
-
-1. 已登录用户选择 Allow-list 中的本地 Product/Price Key。
-2. 服务端解析 Stripe Price ID；浏览器不能传任意 Amount 或 Secret Price ID。
-3. 服务端带本地 Payment Command/User Metadata 与 Idempotency Key 创建 Checkout Session。
-4. Return Page 在数据库确认前显示 `confirming`。
-5. Webhook 读取 Raw Body、验证签名并唯一保存 Event ID。
-6. 只有 `invoice.paid` 的一个事务更新 Payment/Subscription，并追加 Entitlement/Credit Ledger Entry；`checkout.session.completed` 只关联 Checkout 与 Subscription。
-7. Delayed、Duplicate 和 Out-of-order Event 可安全处理。
-8. 对 Stuck Record 可通过 Stripe API 定期或人工 Reconciliation。
-
-最终 Event Allow-list 为 `checkout.session.completed`、`checkout.session.expired`、`invoice.paid`、`invoice.payment_failed`、`customer.subscription.created`、`customer.subscription.updated` 与 `customer.subscription.deleted`。每个 Price 的正整数 `credits` 由服务端读取的 Test Mode Stripe Price Metadata 冻结到本地 Payment/Subscription；任何 Browser Redirect 或 Query 参数都不能直接发放 Credits。
-
-## 12. SEO 架构
-
-- 使用 Next.js App Router 的 Server Rendering/Static Generation 与 Metadata API。
-- 每个公开 Route 有独立 Title/Description、Canonical、Open Graph/X 数据和单一 H1。
-- 通过 Framework Convention 生成 `robots` 和 `sitemap`。
-- 只为页面上真实存在的内容添加 Structured Data，例如 Organization、WebSite、BreadcrumbList、适用时的 FAQPage。
-- `features/{slug}` 与 `models/{slug}` 使用 Typed Content Record 和复用模板，只生成批准 Slug。
-- Account、Callback、Checkout Return、Private Job 与 API 为 `noindex` 或从 Sitemap 排除。
-- Locale Routing 与 `hreflang` 为 P2/TBD。
-- 自动验证 Server HTML、Canonical、Sitemap、Broken Link、Heading、404 与 Redirect。
-
-## 13. 媒体存储与异步工作
-
-Database 阶段前核实 fal Output URL 生命周期。若 History 要求超过该期限，则 Supabase Storage 成为必要项：使用短期 Signed URL、服务端 MIME/Size 校验、Ownership Policy 和 Lifecycle Deletion，不通过普通 App Request 代理大 Video。
-
-初始不增加独立 Queue Platform。fal Queue/Webhook 加 Database Outbox/Reconciliation 足够时保持该方案；只有真实行为或 Deployment Limit 证明必要时再升级。
-
-## 14. 环境变量与安全
-
-- 所有 Secret 放在 `.env.local` 或 Managed Secret Store；只提交无值的 `.env.example`。
-- `NEXT_PUBLIC_*` 只包含可公开的 Supabase URL/Anon Key；Service Role、fal 与 Stripe Secret 禁止使用该前缀。
-- OAuth 精确 Redirect URI，使用 state/nonce 和安全 Cookie。
-- Stripe Webhook 校验 Raw Body 与 Signature。Phase 6 fal Queue Callback 使用每次提交附加的高熵 HTTPS URL token、原始 Body SHA-256 Receipt 与数据库幂等约束；不得接受无 token 的 callback。若 fal 账户启用或发布签名验证能力，必须在部署前增加该验证。
-- Auth、Quote、Upload、Generation 与 Checkout 需要 Input Validation、Rate Limit 和 Abuse Control。
-- 默认不记录完整 Prompt/Media/Provider Raw Response，日志中 Redact Secret 与敏感字段。
-- 媒体默认 Private，并定义 Retention/Deletion。
-- CI 最终加入 Dependency、Secret 与 License Scan；未真正配置或执行前保持 `NOT EXECUTED`。
-
-## 15. 质量与测试分层
-
-最终目标命令：`format`、`lint`、`typecheck`、`test`、`test:integration`、`test:e2e`、`test:contract`、`build` 与显式 Opt-in 的 `test:real:*`。
-
-- Unit：Pricing Rule、State Transition、Ledger Allocation、Error Mapping；
-- Database Integration：Transaction、Concurrency、Idempotency、RLS/Ownership；
-- Contract：fal/Stripe Payload Fixture、Signature Handling、Schema Drift；
-- E2E：Auth、Studio、Quote、Task、Payment Return、Account；
-- Real Integration：Google、三个 fal 模型和 Stripe Sandbox，独立标记并限制预算；
-- Visual：固定环境与批准 Viewport 的 Playwright Screenshot；
-- SEO/Accessibility：Server HTML、Link/Sitemap/Canonical、axe/Lighthouse 与人工键盘测试。
-
-Mock/Stub 只能用于隔离测试。Release Gate 必须单独记录真实 Demo 路径的 Integration `PASS`。
-
-## 16. 风险与未决架构项
-
-| 风险 / 决策                  | 影响                                  | 处理                                                                    |
-| ---------------------------- | ------------------------------------- | ----------------------------------------------------------------------- |
-| Cloudflare 阻断视觉调研      | 无法冻结 Fidelity/Token               | 用户提供可访问浏览器或 Reference Screenshot；之前保持 `Requires access` |
-| fal Model/成本未确认         | 真实 Demo 可能失败或超预算            | AI 阶段前小范围验证三个 Endpoint，设置硬预算                            |
-| Media TTL/History 期限未知   | 决定 Supabase Storage 是否必要        | 在 Storage/Generation 阶段核实并记录 ADR                                |
-| Auth/Google Credentials 缺失 | 不能完成真实 E2E                      | 标记 `Requires credentials`，不以 Mock 冒充                             |
-| Stripe Live Mode 未获授权    | 不能进行真实收款或上线验收            | 已完成 Sandbox 闭环；继续只使用 Sandbox/Test，Live Mode 保持未授权      |
-| Deployment 未选              | Webhook、Region 和 Preview 流程未冻结 | 到 Deployment Planning 再确认，不阻塞 Foundation                        |
-| Creen Pricing 文案存在矛盾   | 直接复制会引入缺陷                    | 以本项目已批准 Product/Price 为 Source of Truth                         |
+Unit 覆盖价格、输入、状态转换和错误映射；Database/Integration 覆盖 RLS、事务、并发和幂等；Contract 覆盖 fal/Stripe Payload 与签名；E2E 覆盖 Auth、Studio、SEO、Payment 和 Account；Real Integration 单独记录 Google、fal 和 Stripe Sandbox 证据。

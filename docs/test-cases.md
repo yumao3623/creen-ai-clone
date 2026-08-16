@@ -1,171 +1,132 @@
-# 测试用例与验证状态
+# 测试矩阵与验收结果
 
-本文件是测试状态的单一事实来源。`PASS` 必须有真实证据；`NOT EXECUTED` 不等于失败，但仍是交付风险。
+本文件只记录当前交付版本的验收事实。状态含义：`PASS` 表示已有执行证据，`FAIL` 表示执行后未满足预期，`NOT EXECUTED` 表示尚未执行，不能以推断替代。
 
-## 1. Research 阶段检查
+## 结果摘要
 
-| ID    | Requirement | 检查                                                      | 结果         | 证据 / 备注                                   |
-| ----- | ----------- | --------------------------------------------------------- | ------------ | --------------------------------------------- |
-| R-001 | P0-10       | Implementation 前完整阅读 Handoff 01–08                   | PASS         | `task2-handoff/`；实际路径差异已记录          |
-| R-002 | P0-01/08/09 | 发现并读取当前 Creen 官方公开页面                         | PASS         | C-001–C-016；抓取日期 2026-08-13/14           |
-| R-003 | P0-08       | Desktop Visual Screenshot 与 DOM Inspection               | NOT EXECUTED | Cloudflare 阻断直接导航；C-018                |
-| R-004 | P0-08       | Tablet/Mobile Responsive Comparison                       | NOT EXECUTED | Requires access                               |
-| R-005 | P0-02/03/04 | Creen Register、First-party、Google UI Behavior           | NOT EXECUTED | Requires access                               |
-| R-006 | P0-05/06    | Creen 真实 Generation、Failure/Cancel                     | NOT EXECUTED | Requires access；未猜测                       |
-| R-007 | P0-07       | Creen Payment/Stripe UI 与状态                            | NOT EXECUTED | Pricing 提及 Stripe；Checkout Requires access |
-| R-008 | P0-09       | Public URL/Content/Heading/Internal Link/Landing Logic    | PASS         | C-001–C-015                                   |
-| R-009 | P0-09       | 精确 Canonical/Robots/Sitemap/JSON-LD                     | NOT EXECUTED | Cloudflare 阻断 Exact Head                    |
-| R-010 | P0-06       | AI Provider Capability/Pricing/Limit/Data Policy Research | PASS         | A-001–A-011；Account-specific Access 仍 TBD   |
-| R-011 | P0-02/03/04 | Auth Candidate Official-doc Research                      | PASS         | T-001–T-003                                   |
-| R-012 | P0-07       | Stripe Candidate 与 Sandbox Research                      | PASS         | T-004–T-006                                   |
+| 状态         | 数量/结论                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| PASS         | 认证、真实 AI、Credits、Stripe Sandbox、SEO、UI、构建与浏览器主要路径均有通过记录             |
+| FAIL         | 0                                                                                             |
+| NOT EXECUTED | 空数据库完整 migration replay、托管 CI 触发、完整 secret/license 扫描，以及部分第三方异常边界 |
 
-## 2. Scaffold / Foundation 阶段验证
+真实集成脱敏证据目录：[docs/real-integration](real-integration)。过程验证记录见 [evidence-index.md](evidence-index.md)。
 
-以下状态只在命令真实执行后更新。
+## Source Evidence 与基础门禁
 
-| ID    | Requirement | 检查                                              | 当前状态     | 证据                                                |
-| ----- | ----------- | ------------------------------------------------- | ------------ | --------------------------------------------------- |
-| F-001 | P1-14       | Next.js App Router + TypeScript Scaffold 可安装   | PASS         | `next@16.3.1`、`react@19.2.8`、`pnpm-lock.yaml`     |
-| F-002 | P1-14       | `pnpm lint`                                       | PASS         | ESLint Exit 0                                       |
-| F-003 | P1-14       | `pnpm typecheck`                                  | PASS         | `tsc --noEmit` Exit 0                               |
-| F-004 | P1-14       | Foundation Unit Test                              | PASS         | Vitest：1 File / 2 Tests PASS                       |
-| F-005 | P1-14       | Production `pnpm build`                           | PASS         | Next.js Production Build；`/`、`/_not-found` Static |
-| F-006 | P1-13       | `.env.example` 无 Secret，`.env*` Ignore 正确     | PASS         | `.env.example` 仅变量名；Secret/Ignore Check        |
-| F-007 | P1-14       | TypeScript Strict 与模块边界配置                  | PASS         | `strict`、`allowJs: false`、显式 `src` Boundary     |
-| F-008 | P0-01/08    | Foundation Shell 基础响应式与 Accessibility Smoke | NOT EXECUTED | 视觉复刻不在本阶段                                  |
+| ID     | 检查                                                                    | 状态         | 证据/限制                                                    |
+| ------ | ----------------------------------------------------------------------- | ------------ | ------------------------------------------------------------ |
+| X-001  | Creen 公开页面、页面族和 SEO 内容调研                                   | PASS         | 公开抓取内容与证据索引                                       |
+| X-002a | 参考截图驱动的 Home、Studio、Pricing、Auth、Landing 与 Account 视觉审阅 | PASS         | 参考截图、Playwright 截图与受控 Account 会话                 |
+| X-002b | Creen 源站 DOM、响应式和登录后 UI 直接采集                              | NOT EXECUTED | 源站访问限制；不以推测替代                                   |
+| X-003  | Creen 真实生成、支付和完整 Auth UI 观察                                 | NOT EXECUTED | 需要源站访问与账户权限                                       |
+| X-004  | fal、Supabase Auth、Stripe Sandbox 官方能力调研                         | PASS         | 官方文档与证据索引                                           |
+| F-001  | Install、Strict TypeScript、环境变量和 Secret Ignore 检查               | PASS         | Lockfile、`tsconfig`、`.env.example`                         |
+| F-002  | Lint、Typecheck、Foundation Unit、Production Build                      | PASS         | 本地质量门禁                                                 |
+| F-003  | Foundation 视觉复刻检查                                                 | PASS         | 后续参考截图、响应式、键盘、axe、媒体和 Account 审阅证据覆盖 |
 
-## 3. Authentication 阶段验证
+## 核心业务测试用例
 
-| ID     | Requirement       | 检查                                               | 当前状态 | 证据                                                       |
-| ------ | ----------------- | -------------------------------------------------- | -------- | ---------------------------------------------------------- |
-| A4-001 | P0-02/03/P1-01/02 | Email/Password 输入、错误映射与环境配置 Unit       | PASS     | Vitest：`validation.test.ts`、`env.test.ts`                |
-| A4-002 | P0-04/P1-03       | OAuth Cancel、Callback 与安全 Redirect Contract    | PASS     | Vitest：`route.test.ts`                                    |
-| A4-003 | P1-04             | Account / Generate 访问策略 Unit                   | PASS     | Vitest：`access.test.ts`                                   |
-| A4-004 | P1-01/04/13       | Root Proxy Public/Page/API Guard Integration       | PASS     | Vitest：`proxy.test.ts`                                    |
-| A4-005 | P0-02/03/04       | Supabase SSR Production Build                      | PASS     | Next.js Build；Auth Routes 与 Root Proxy 编译成功          |
-| A4-006 | P1-04             | 无 Credential 的本地 Production HTTP Smoke         | PASS     | `/`、`/studio`、`/login` 200；`/account` 307；Generate 503 |
-| A4-007 | P0-02/03/P1-01/02 | 真实 Email Register/Login/Logout/Refresh E2E       | PASS     | 2026-08-15；本地 Production Server + 项目所有者测试邮箱    |
-| A4-008 | P0-04/P1-03       | 真实 Google Consent/Callback/Provider Identity E2E | PASS     | 2026-08-15；本地 Production Server + Google Test User      |
+以下用例从现有 Vitest、Playwright、真实集成记录和受控人工验收中整理，保留与招聘要求直接相关的操作级证据。
 
-## 4. 后续 Implementation 验证
+| Test ID | 模块                            | 类型                      | 前置条件                                  | 操作步骤                                                                              | 预期结果                                                       | 状态         | 证据                                             |
+| ------- | ------------------------------- | ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------ | ------------------------------------------------ |
+| C-001   | Email 注册/登录/退出            | Real Integration + E2E    | Supabase 已配置，使用受控邮箱             | 注册；必要时确认邮箱；登录；刷新；退出；再次访问 Account                              | 会话持久化；退出后 Account 受保护并回到 Login                  | PASS         | `docs/authentication.md`；真实 Auth 验收         |
+| C-002   | Google OAuth                    | Real Integration + E2E    | Google Test User 与 Redirect 已配置       | 点击 Google；完成 Consent、Callback；进入 Account                                     | Provider Identity 显示 Google，Session 可用                    | PASS         | `docs/authentication.md`；真实 Google 证据       |
+| C-003a  | Google callback 安全边界        | Unit/Contract             | OAuth callback 路由可访问                 | 发送取消和不安全 `next` 的 callback                                                   | 映射稳定错误并限制为站内返回路径                               | PASS         | `src/app/auth/callback/route.test.ts`；U-002     |
+| C-003b  | Google 异常 E2E                 | Real E2E                  | Google Test User 与真实 OAuth 可用        | 执行真实 Cancel、Invalid callback/state、Callback error 和同邮箱冲突路径              | 每个边界有真实可复核结果；这些场景尚未执行                     | NOT EXECUTED | `docs/authentication.md`；E-003                  |
+| C-004   | 游客 Studio 与 Generate Guard   | Integration + E2E         | 未登录、公开页面可用                      | 访问 Studio；填写输入；尝试 Quote/Generate；访问 Account                              | Studio 可浏览；受保护操作跳转 Login；未认证 API 返回安全错误   | PASS         | `src/integrations/supabase/proxy.test.ts`；E-005 |
+| C-005   | Text-to-Image                   | Real Integration          | 受控 Supabase 用户和 fal 凭据             | 创建受控任务上下文；提交 fal Queue；等待完成；读取 Image Result；等待 Webhook Receipt | 真实 Image Task 完成，保存 Task/Result/Receipt，Credits 可对账 | PASS         | [fal 真实证据](real-integration)；R-001          |
+| C-006   | Image-to-Video                  | Real Integration          | Text-to-Image 已有 HTTPS Result           | 以真实 Image Result 作为输入；提交 5 秒 Video；等待完成；读取 Result 和 Receipt       | 真实 5 秒 Video 完成并保留 Webhook/Result 证据                 | PASS         | [fal 真实证据](real-integration)；R-002          |
+| C-007   | Text-to-Speech                  | Real Integration          | 受控 Supabase 用户和 fal 凭据             | 提交文本和 voice setting；等待完成；读取 Audio Result 和 Webhook Receipt              | 真实 Audio 完成，保留 Result 证据                              | PASS         | [fal 真实证据](real-integration)；R-003          |
+| C-008   | Quote 与参数一致性              | Unit/Database Integration | 已认证用户                                | 对三模态请求获取 Quote；改变输入或等待过期后提交旧 Quote                              | 返回确定成本；过期或不匹配 Quote 不可提交                      | PASS         | `pricing.test.ts`；Credits migration contract    |
+| C-009   | Credits 不足                    | Real Database Integration | 账户可用余额低于 Quote 成本               | 获取 Quote；提交 Generate                                                             | 返回 `409 insufficient_credits`，Provider 未被调用             | PASS         | [Credits 真实证据](real-integration)；I-003      |
+| C-010   | Duplicate Submit                | Real Database Integration | 同一用户、同一 Client Key 和 Request Hash | 并发或重复提交同一请求                                                                | 返回同一 Task/Reservation，不重复调用或扣费                    | PASS         | [Credits 真实证据](real-integration)；I-002      |
+| C-011   | Success Settlement              | Real Database Integration | 已完成并预留 Credits 的任务               | 处理成功 callback，再 Replay 同一 callback                                            | 只结算一次；Reservation 归零；Ledger 可核对                    | PASS         | [Credits 真实证据](real-integration)；I-003      |
+| C-012   | Failure Compensation            | Real Database Integration | 已预留 Credits 的失败任务                 | 处理 Provider failure callback                                                        | 原 Lot 恢复；保留 Reserve Debit 与 Compensation Credit         | PASS         | [Credits 真实证据](real-integration)；I-003      |
+| C-013   | Stripe Subscription             | Stripe Sandbox E2E        | 已登录用户和 Test Price                   | 从 Account 选择 Subscription；完成 Hosted Checkout；等待 Webhook                      | Payment/Subscription 为可信状态，每期 25,000 Credits 入账      | PASS         | [Stripe 真实证据](real-integration)；S-001       |
+| C-014   | Stripe recurring Credit Pack    | Stripe Sandbox E2E        | 已登录用户和 Test Price                   | 选择 recurring Credit Pack；完成 Checkout；等待 Webhook                               | 每期 7,500 Credits 入账，Account 可见记录                      | PASS         | [Stripe 真实证据](real-integration)；S-002       |
+| C-015   | Stripe 取消、拒付与 3DS         | Stripe Sandbox E2E        | Stripe Sandbox 测试场景                   | 分别执行 Cancel、Card Decline、3DS、Bank/Link                                         | Cancel/Decline 不发 Credits；成功场景进入可信状态              | PASS         | [Stripe 真实证据](real-integration)；S-003/S-004 |
+| C-016   | Stripe Webhook Replay           | Stripe Integration        | 已有已处理 `invoice.paid`                 | 重放同一事件并发送乱序事件                                                            | 返回 replay；不重复创建 Lot/Ledger，较新状态不被覆盖           | PASS         | [Stripe 真实证据](real-integration)；S-005/S-006 |
+| C-017   | Account Ownership 与 History    | Database + E2E            | 两个受控用户；一个用户有任务和账本        | 分别访问 Account；查看任务、账本、Payment/Subscription                                | 每个用户只能看到自己的记录；Account 可读取最近任务和账户区域   | PASS         | RLS/真实 Credits 验收；受控 Account 渲染         |
+| C-018   | SEO 页面                        | E2E/Contract              | Production build 可运行                   | 检查公开页面 HTML、Metadata、Canonical、JSON-LD、Sitemap、Robots、404、Redirect       | 公开 URL 可抓取；私有页面不索引；结构化数据与可见内容一致      | PASS         | Q-001/Q-003；`src/lib/seo.test.ts`               |
+| C-019   | Mobile、Keyboard、Accessibility | E2E + Manual              | Chromium Production Server                | 以 1440x960、390x844 访问页面；用 Tab/Arrow/Home/End 操作 Studio；运行 axe            | 页面无横向溢出；Tab 切换、焦点、媒体和 axe 检查通过            | PASS         | `tests/phase11-ui.spec.ts`；E-006/E-008          |
 
-| ID     | Requirement    | Layer                   | 预期证据                                                          | 状态                                                                                                                                                                                          |
-| ------ | -------------- | ----------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A-001  | P0-02/P1-01/02 | Real Integration + E2E  | 持久化 Email/Password Register/Login/Logout/Refresh               | PASS                                                                                                                                                                                          |
-| A-002  | P0-04/P1-03    | Real Google E2E         | Consent/Callback Session 与 Provider Identity ID                  | PASS                                                                                                                                                                                          |
-| A-003  | P0-04/P1-03/12 | E2E                     | Google Cancel、Invalid State、Callback Error、Same-email Policy   | NOT EXECUTED                                                                                                                                                                                  |
-| G-001  | P0-06/P1-05/06 | Real AI Integration     | 真实 Image Output 与 fal Task/Request Evidence                    | PASS — 2026-08-15；真实 fal Task、HTTPS Image 与 Webhook Evidence                                                                                                                             |
-| G-002  | P0-06/P1-05/06 | Real AI Integration     | 真实 Image-to-video Output                                        | PASS — 2026-08-15；真实 5 秒 fal Video 与 Webhook Evidence                                                                                                                                    |
-| G-003  | P0-06/P1-05/06 | Real AI Integration     | 真实 TTS/Audio Output                                             | PASS — 2026-08-15；真实 fal Audio 与 Webhook Evidence                                                                                                                                         |
-| G-004  | P1-12          | Integration/E2E         | Rate Limit、Timeout、Moderation、Failure 与 Safe Error            | NOT EXECUTED                                                                                                                                                                                  |
-| G6-001 | P0-06/P1-05/06 | Unit / Contract         | 三模态 Input、官方 fal Queue Adapter、Status/Result Mapping       | PASS — 2026-08-15；Vitest isolated contract，无真实 Provider 调用                                                                                                                             |
-| G6-002 | P1-05/12       | Unit / Contract         | fal Server Config、HTTPS Webhook Token、Terminal Callback Parsing | PASS — 2026-08-15；Vitest isolated contract                                                                                                                                                   |
-| G6-003 | P1-06/08       | Migration Contract      | Webhook Receipt 去重与 Outbox Event 边界                          | PASS — 2026-08-15；SQL/Repository Contract 与远端 Migration                                                                                                                                   |
-| B-001  | P0-05/P1-07    | Unit/Migration Contract | Deterministic Quote 使用 Immutable Price Version                  | PASS — Phase 7 Pricing Unit + Migration Contract                                                                                                                                              |
-| B-002  | P0-05/P1-08    | DB Concurrency          | 重复/并发 Submit 只有一个 Task/Reservation                        | PASS — 真实 Supabase 并发返回同一 Task，`replayCount=1`                                                                                                                                       |
-| B-003  | P0-05/P1-08    | DB Integration          | Success 只结算一次并正确释放差额                                  | PASS — Success + 原 Hash Replay 后 `available=90,reserved=0`                                                                                                                                  |
-| B-004  | P0-05/P1-08    | DB Integration          | Failure/Cancel 正确补偿且不修改历史 Ledger                        | PASS — Failure 恢复 Lot，并保留 Reserve Debit + Compensation Credit                                                                                                                           |
-| B-005  | P0-05          | E2E                     | Quote、Charge、Task 与 Balance 可对账                             | PASS — `phase7-credits-2026-08-15t164751872z.json`                                                                                                                                            |
-| S-001  | P0-07/P1-09    | Stripe Sandbox E2E      | Subscription Checkout 产生可信 Local Paid/Active State            | PASS — 2026-08-16；签名 Webhook 后为 active，发放 25,000 Credits                                                                                                                              |
-| S-002  | P0-07/P1-09    | Stripe Sandbox E2E      | recurring Pack Checkout 正确增加 Credits                          | PASS — 2026-08-16；签名 Webhook 后发放 7,500 Credits                                                                                                                                          |
-| S-003  | P0-07/P1-09    | Stripe Sandbox          | Decline、3DS、Cancel、Bank/Link                                   | PASS — 2026-08-16；Decline/Cancel 无 Credit，3DS 与 Bank/Link 成功                                                                                                                            |
-| S-004  | P0-07/P1-09    | Webhook Integration     | Signature Reject；Duplicate/Out-of-order Event Idempotency        | PASS — 2026-08-16；`invoice.paid` Replay 无重复发放；时序修复已验证                                                                                                                           |
-| S-005  | P0-07          | Security                | Browser Success URL 不能发放 Credits                              | PASS — 2026-08-16；Cancel Return 无发放，Credits 仅来自 Webhook                                                                                                                               |
-| U-001  | P0-08/P1-10/12 | Route / HTTP Smoke      | 全部确认主 Route 与主要入口可达                                   | PASS — 2026-08-16；`/`、`/studio`、`/pricing`、五个 Landing、Support 返回 200；`/account` Guard 307                                                                                           |
-| U-002  | P0-08/P1-12    | Component / Unit        | Loading/Empty/Error/Success 与 Auth/Credit/Payment State          | PARTIAL — 2026-08-16；状态已实现，现有领域契约、公开路由内容单测与 Build 通过；未新增浏览器组件测试                                                                                           |
-| U-003  | P0-08/P1-15    | Visual/Manual           | Approved Desktop/Tablet/Mobile Comparison                         | PARTIAL — 2026-08-16；Home、Studio、Pricing、Auth、Landing 在 1440×960/390×844 Chromium Screenshot 与人工项目内审阅完成；Creen Source Screenshot/浏览器访问缺失，源站对比为 `Requires access` |
-| U-004  | P0-08          | Accessibility           | Keyboard/Focus/Label/Contrast/axe/Manual                          | PARTIAL — 2026-08-16；Playwright 验证 Studio Arrow/Home/End tabs、skip link target、Home axe 零 violation 与 reduced motion 静态回退；已登录 Account 的人工键盘/视觉审阅仍需受控会话          |
-| U-005  | P0-08          | Manual Keyboard Smoke   | Studio 模态、表单焦点、窄屏导航与 Auth CTA 的最小键盘路径         | PASS — 2026-08-16；人工仅用 Tab/Enter 验证 Video/Audio、textarea focus、390px 菜单/创作链接、`/login?next=%2Fstudio`                                                                          |
-| E-001  | P0-09/P1-11    | HTML/SEO                | Unique Title/Description/Canonical/H1                             | PASS — Phase 10 typed SEO contract 与 Production Server HTML 检查                                                                                                                             |
-| E-002  | P0-09/P1-11    | SEO                     | Robots/Sitemap/Noindex/404/Redirect/Internal Link                 | PASS — Sitemap 仅 15 个公开 URL；私有路径禁止抓取/noindex；`/create` 308；流式 404 带 noindex                                                                                                 |
-| E-003  | P0-09/P1-11    | Structured Data         | Schema 与可见内容一致并通过验证                                   | PASS — Organization/WebSite 与可见 FAQ 的 JSON-LD 结构契约和 Server HTML 检查                                                                                                                 |
-| Q-001  | P0-10/P1-14    | CI                      | Format/Lint/Typecheck/Unit/Integration/E2E/Build Gate             | NOT EXECUTED — Workflow 已定义；Hosted CI 尚未触发，等同本地命令见 T12-001–003                                                                                                                |
-| Q-002  | P1-13/14       | CI/Security             | Secret/Dependency/License Scan                                    | NOT EXECUTED — Production dependency audit 通过；完整 Secret 与 License Scan 尚未配置或执行，见 T12-006                                                                                       |
-| Q-003  | P0-06/07       | Release Gate            | Stub 与真实 Google/fal/Stripe 结果分开报告                        | PASS — `docs/phase12-testing-evidence.md` 明确分隔 isolated fixture/stub 与既有真实 Provider Evidence                                                                                         |
+## Unit 与 Contract
 
-## 9. Phase 11 UI / Responsive Polish 阶段验证
+| ID    | 检查                                                             | 状态 | 证据                                              |
+| ----- | ---------------------------------------------------------------- | ---- | ------------------------------------------------- |
+| U-001 | Email/Password 校验、环境变量和错误映射                          | PASS | `src/domain/auth/*test.ts`、`src/config/*test.ts` |
+| U-002 | Google OAuth callback、取消和安全 Redirect                       | PASS | `src/app/auth/callback/route.test.ts`             |
+| U-003 | Auth、Account、Generate 访问策略                                 | PASS | `src/domain/auth/access.test.ts`                  |
+| U-004 | 三模态输入、模型 Allow-list、Provider Payload                    | PASS | `src/domain/generation/*test.ts`                  |
+| U-005 | Generation 状态转换与结果引用约束                                | PASS | `src/domain/generation/state.test.ts`             |
+| U-006 | Credits 价格、字符计费和参数规则                                 | PASS | `src/domain/credits/pricing.test.ts`              |
+| U-007 | fal Config、Upload 限制、Webhook Token 与结果解析                | PASS | `src/integrations/fal/*test.ts`                   |
+| U-008 | Stripe Test Mode、Product Metadata、Webhook Signature 与事件映射 | PASS | `src/integrations/stripe/*test.ts`                |
+| U-009 | Database、RLS、Generation、Credits、Stripe migration contracts   | PASS | `src/db/*migration-contract.test.ts`              |
 
-| ID      | Requirement                      | 检查                                                               | 当前状态 | 证据 / 备注                                                                                       |
-| ------- | -------------------------------- | ------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------- |
-| UI11-01 | Design Token / Interaction State | 统一 surface、border、focus、hover、active、disabled 与 form state | PASS     | `src/app/globals.css`；不改变 Auth、Credits、Stripe 或 Generate 契约                              |
-| UI11-02 | Media Treatment                  | 真实 Image、5 秒 Video、TTS Audio 本地媒体资产                     | PASS     | `public/media/phase11-studio.{jpg,mp4,mp3}`；通过显式 `$10` 预算授权的 Phase 6 fal 模型生成并下载 |
-| UI11-03 | Responsive Screenshot            | Home、Studio、Pricing、Auth、Landing 的 1440×960 与 390×844 截图   | PASS     | `tests/phase11-ui.spec.ts`；14 个 Chromium 检查全部通过，输出位于被忽略的 `test-results/`         |
-| UI11-04 | Keyboard / Reduced Motion / axe  | Studio Arrow/Home/End、静态媒体回退、Home axe                      | PASS     | `tests/phase11-ui.spec.ts`；Playwright 14 passed                                                  |
-| UI11-05 | Source Fidelity / Account Review | 与 Creen 源截图比较、已登录 Account 的人工视觉和键盘审阅           | PASS     | 用户已提供 1440×960/390×844 源截图；受控会话登录后截图复核通过，测试用户已删除                    |
+## Integration 与 Database
 
-## 5. Database / Core Domain 阶段验证
+| ID    | 检查                                                              | 状态         | 证据                                                  |
+| ----- | ----------------------------------------------------------------- | ------------ | ----------------------------------------------------- |
+| I-001 | Supabase SSR Session、Proxy 和公开/受保护路由                     | PASS         | `src/integrations/supabase/proxy.test.ts`；HTTP Smoke |
+| I-002 | 真实 RLS Ownership、并发 Reservation 与重复提交                   | PASS         | 两个受控用户、真实 JWT/PostgREST 验收                 |
+| I-003 | Credits Success Settlement、Failure Compensation、Lot/Ledger 对账 | PASS         | [真实 Credits 证据](real-integration)                 |
+| I-004 | Webhook Receipt、Hash、Outbox 与重复 Callback 幂等                | PASS         | Repository/SQL Contract 与真实回调记录                |
+| I-005 | 空数据库按完整 migration history 回放                             | NOT EXECUTED | 当前远端数据库已有应用记录，未在隔离空库重建          |
 
-| ID      | Requirement | 检查                                                     | 当前状态     | 证据 / 备注                                                                                                             |
-| ------- | ----------- | -------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| DB5-001 | P0-05/P1-08 | Schema、RLS、不可变约束与事务 RPC Migration Contract     | PASS         | `202608150001_phase5_core_domain.sql`；Vitest `migration-contract.test.ts`                                              |
-| DB5-002 | P0-06/P1-05 | Generation Allow-list State Machine                      | PASS         | Vitest `state.test.ts`；数据库 Trigger 与领域状态表对应                                                                 |
-| DB5-003 | P1-08       | Stable Request Hash 与 Repository RPC Result Boundary    | PASS         | Vitest `request.test.ts`；`src/db/generation-repository.ts`                                                             |
-| DB5-004 | P1-08       | Clean-environment Migration History Replay               | NOT EXECUTED | 主远端项目已首次应用；尚未在隔离空数据库通过 migration history / `supabase db reset` 重建，禁止在已应用项目重复粘贴 SQL |
-| DB5-005 | P1-08       | Real RLS Ownership、RPC Idempotency 与 Concurrent Submit | PASS         | 2026-08-15；两个受控 Email/Password 用户、真实 JWT/PostgREST RPC 与并发 PowerShell Job                                  |
+## E2E 与 UI
 
-## 6. Phase 6 AI Generation 阶段验证
+| ID    | 检查                                                       | 状态         | 证据                                       |
+| ----- | ---------------------------------------------------------- | ------------ | ------------------------------------------ |
+| E-001 | Email Register/Login/Logout/Refresh 与 Session Persistence | PASS         | 真实测试邮箱、本地 Production Server       |
+| E-002 | Google Consent/Callback/Provider Identity                  | PASS         | Google Test User、本地 Production Server   |
+| E-003 | Google Cancel、Invalid State、Callback Error、同邮箱策略   | NOT EXECUTED | 未有独立真实边界执行记录                   |
+| E-004 | 公开路由、Studio、Pricing、Landing、Support/Legal 可达     | PASS         | Production HTTP Smoke                      |
+| E-005 | 未登录 Account Guard、Generate Guard 与安全错误            | PASS         | `/account` 返回 307；Generate 未认证被拒绝 |
+| E-006 | Studio 三 Tab、表单焦点、窄屏导航和 Auth CTA 键盘流程      | PASS         | Playwright 与人工键盘 Smoke                |
+| E-007 | Desktop/Mobile 响应式截图、媒体和 reduced motion           | PASS         | Playwright：16 个 Chromium 场景            |
+| E-008 | axe 检查、语义结构和 Skip Link                             | PASS         | Playwright axe 与页面检查                  |
+| E-009 | Provider Rate Limit、Timeout、Moderation、Failure 安全错误 | NOT EXECUTED | 未进行额外真实 Provider 异常调用           |
 
-| ID     | Requirement    | 检查                                                                             | 当前状态 | 证据 / 备注                                                     |
-| ------ | -------------- | -------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
-| G6-101 | P0-06/P1-05/06 | fal 三模态契约、Queue Adapter、HTTPS Result Mapping、Reconciliation              | PASS     | 2026-08-15；Vitest 隔离契约测试，不是 Provider E2E              |
-| G6-102 | P1-05/12       | fal Config、服务端 Secret 边界、Upload MIME/Size、Webhook Token                  | PASS     | 2026-08-15；Vitest + Strict TypeScript                          |
-| G6-103 | P1-06/08       | fal Webhook Receipt、Raw Body Hash、Repository Replay、Outbox Migration Contract | PASS     | 2026-08-15；隔离测试与 `202608150002_phase6_fal_lifecycle.sql`  |
-| G6-104 | P0-06          | 真实 Text → Image                                                                | PASS     | `fal-ai/flux/schnell`；真实 Task/Image/Receipt Evidence         |
-| G6-105 | P0-06          | 真实 Image → Video                                                               | PASS     | `fal-ai/kling-video/v2.1/standard/image-to-video`；5 秒真实结果 |
-| G6-106 | P0-06          | 真实 Text → Speech                                                               | PASS     | `fal-ai/minimax/speech-02-hd`；真实 Task/Audio/Receipt Evidence |
-| G6-107 | P1-05/06       | 远端 Phase 6 Migration、真实 Webhook Receipt/Replay 与 Result Evidence           | PASS     | 3 个真实 Receipt/Replay；fal 实际明细 `$0.2866`，低于 `$5` 上限 |
+## Real Integration
 
-## 7. Phase 7 Credits 阶段验证
+| ID    | 类型             | 检查                            | 状态 | 结果                                                     |
+| ----- | ---------------- | ------------------------------- | ---- | -------------------------------------------------------- |
+| R-001 | Real Integration | fal Text-to-Image               | PASS | 真实 Image、Task、Webhook Receipt 和 Result              |
+| R-002 | Real Integration | fal Image-to-Video              | PASS | 真实 5 秒 Video、Task、Webhook Receipt 和 Result         |
+| R-003 | Real Integration | fal Text-to-Speech              | PASS | 真实 Audio、Task、Webhook Receipt 和 Result              |
+| R-004 | Real Integration | fal 三次回调 Replay             | PASS | 三次回调均返回 replayed，不重复处理                      |
+| R-005 | Real Integration | 真实 Provider 费用核对          | PASS | fal Usage 合计 USD 0.2866，页面四舍五入显示 USD 0.29     |
+| R-006 | Real Integration | Google OAuth 成功路径           | PASS | Consent、Callback、Session、Provider Identity 与 Account |
+| R-007 | Real Integration | Supabase Credits 成功/失败/并发 | PASS | 30 Credits Quote；Success 单扣；Failure 补偿；余额可对账 |
 
-| ID     | Requirement | 检查                                                      | 当前状态 | 证据 / 备注                                                                    |
-| ------ | ----------- | --------------------------------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| B7-101 | P0-05/P1-07 | 三模态冻结价格、Parameter Rule 与不可变 Price Version     | PASS     | `pricing.test.ts`、`credits-migration-contract.test.ts`                        |
-| B7-102 | P0-05/P1-08 | Quote/Reserve/Lot Allocation/Ledger Migration Contract    | PASS     | `202608150004_phase7_credits.sql`；Subscription 先于 Pack                      |
-| B7-103 | P0-05/P1-08 | Callback Receipt + Settle/Compensate 原子边界与 Replay    | PASS     | SQL/Repository 隔离契约；旧 receipt-only RPC 被移除                            |
-| B7-104 | P0-05/P1-08 | 真实 Supabase 并发 Duplicate Submit 与余额不足阻断        | PASS     | 真实 JWT/PostgREST；同 Task、一次 Replay、零余额在 Provider 前阻断             |
-| B7-105 | P0-05/P1-08 | 真实 Supabase Success 单扣、Failure 补偿、Lot/Ledger 对账 | PASS     | `docs/real-integration/phase7-credits-2026-08-15t164751872z.json`              |
-| B7-106 | P0-05/P1-12 | Production Build 与 Studio 提交前确定报价                 | PASS     | `/api/quotes`、`/api/generate`、Studio Quote → Generate；Next Production Build |
+## Stripe Sandbox
 
-## 8. Phase 8 Stripe 阶段验证
+| ID    | 检查                                        | 状态 | 结果                                |
+| ----- | ------------------------------------------- | ---- | ----------------------------------- |
+| S-001 | Subscription Hosted Checkout 与签名事件     | PASS | Active；每期 25,000 Credits         |
+| S-002 | recurring Credit Pack Hosted Checkout       | PASS | 每期 7,500 Credits                  |
+| S-003 | Cancel、Card Decline                        | PASS | 均未发放 Credits                    |
+| S-004 | 3DS、Bank/Link Sandbox Payment              | PASS | 成功完成                            |
+| S-005 | `invoice.paid` Replay 与重复事件            | PASS | 无重复 Lot/Ledger；事件处理错误为 0 |
+| S-006 | Out-of-order Event 与 Subscription 状态时序 | PASS | 最终状态为可信 `active`             |
+| S-007 | Browser Return URL 直接发放 Credits         | PASS | 不发放；只有签名 Webhook 更新余额   |
 
-| ID     | Requirement | 检查                                                                    | 当前状态 | 证据 / 备注                                                                                             |
-| ------ | ----------- | ----------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| S8-101 | P0-07/P1-09 | Test Mode Product Allow-list、Price Metadata 与 Server-only Config      | PASS     | `config.test.ts`、`product.test.ts`；浏览器不传 Price/Amount/Credits                                    |
-| S8-102 | P0-07/P1-09 | Checkout Command、Payment/Invoice/Subscription Mapping Migration        | PASS     | `202608160002_phase8_stripe.sql`、`stripe-migration-contract.test.ts`                                   |
-| S8-103 | P0-07/P1-09 | Raw Body Signature、Event Allow-list、Live Mode Reject、Webhook Fixture | PASS     | `webhook.test.ts`；Route 使用官方 Stripe SDK `constructEvent`                                           |
-| S8-104 | P0-07/P1-09 | Return URL 不发放 Credits；仅 `invoice.paid` 入 Lot/Ledger              | PASS     | Return Page 只读状态；SQL Contract 检查 Account Lock、Invoice Unique 与 `stripe.credits_granted` Outbox |
-| S8-105 | P0-07/P1-09 | Stripe Sandbox Success/Cancel/Decline/3DS/Bank-Link + Event Replay E2E  | PASS     | Subscription/Pack 各成功一次；Cancel/Decline 无发放；3DS、Bank/Link、Invoice Replay 均通过              |
-| S8-106 | P0-07/P1-09 | 远端 Phase 8 Migration / 真实 JWT Account-Credits-Ledger 对账           | PASS     | `202608160002`–`202608160005` 已应用；4 Lot、4 Ledger Credit、65,000 Credits、0 Event Error             |
+## SEO、Build 与 Release
 
-## 10. Phase 12 — Testing
+| ID    | 检查                                                                    | 状态         | 证据                                            |
+| ----- | ----------------------------------------------------------------------- | ------------ | ----------------------------------------------- |
+| Q-001 | 每个公开页面的 Title、Description、Canonical、H1                        | PASS         | Typed SEO Contract 与 Production HTML           |
+| Q-002 | Robots、Sitemap、Noindex、404、Redirect、Internal Link                  | PASS         | Sitemap 公开 URL、私有边界与 `/create` Redirect |
+| Q-003 | Organization/WebSite JSON-LD 与可见内容一致                             | PASS         | Server HTML Contract                            |
+| Q-004 | `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build` | PASS         | 本地质量门禁；Production Build 成功             |
+| Q-005 | Chromium E2E                                                            | PASS         | 16 个场景通过                                   |
+| Q-006 | Hosted CI Workflow 实际触发                                             | NOT EXECUTED | 待 GitHub push 后首次 Hosted CI 实际运行验证    |
+| Q-007 | 完整 Secret 与 License Scanner                                          | NOT EXECUTED | 生产依赖 advisory 检查通过，完整扫描未配置/执行 |
+| Q-008 | Real 与 Stub/Fixture 证据分离                                           | PASS         | 生产路径无 Mock 结果；隔离 fixture 单独记录     |
 
-| ID      | Requirement | Layer                     | 检查                                                       | 状态         | 证据 / 备注                                                                                                |
-| ------- | ----------- | ------------------------- | ---------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------- |
-| T12-001 | P1-14       | Format / Static / Unit    | `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`  | PASS         | 2026-08-16；Prettier、ESLint、Strict TypeScript 通过；Vitest 30 files / 69 tests passed                    |
-| T12-002 | P1-14       | Production Build          | 隔离目录生产构建                                           | PASS         | 2026-08-16；`NEXT_DIST_DIR=.phase12-next pnpm build` 生成 `BUILD_ID`；`pnpm test:e2e` 的独立生产构建也通过 |
-| T12-003 | P0-08/P1-12 | E2E / Accessibility       | Chromium 公开页面、响应式、键盘、axe、媒体与 Account Guard | PASS         | 2026-08-16；`pnpm test:e2e`，16 个生产浏览器场景通过                                                       |
-| T12-004 | P0-02/03    | Real Integration E2E      | 受控真实 Supabase 用户登录并读取 Account                   | PASS         | 2026-08-16；`PHASE11_ACCOUNT_VISUAL=1 node scripts/phase11-account-visual.mjs`；测试用户在 `finally` 删除  |
-| T12-005 | P1-13/14    | Dependency Security       | Production dependency advisory scan                        | PASS         | 2026-08-16；`pnpm audit --prod --audit-level=high`：No known vulnerabilities found                         |
-| T12-006 | P1-13/14    | Secret / License Security | 全量 Secret scanner 与 License scan                        | NOT EXECUTED | 当前未配置可复现 scanner；`pnpm licenses list` 因本地 pnpm package index 缺失未运行，不能以手工检查替代    |
-| T12-007 | P0-10/P1-14 | Hosted CI                 | GitHub Actions quality、E2E、dependency-audit workflow     | NOT EXECUTED | `.github/workflows/quality.yml` 已定义；本轮未触发 hosted run                                              |
-| T12-008 | P0-04/06/07 | Real vs Stub Evidence     | 分离真实 Google/fal/Stripe 与 isolated fixture/stub 结果   | PASS         | `docs/phase12-testing-evidence.md`；真实 Provider 未在本轮重新请求，不产生新的 fal/Stripe 成本             |
+## 线上 Smoke
 
-## 11. 真实集成证据规则
-
-- Stub/Fixture 使用明确 Fake Adapter，且 Demo 配置不能引用它。
-- 真实测试记录 Provider/Environment、Timestamp、Model/Product ID、External Object/Task ID（必要时脱敏）、Result Status 和 Cost/Credit Effect。
-- 真实 AI Test 为显式 Opt-in 且有预算上限，不在每个不可信 PR 上自动执行。
-- Stripe 只使用 Sandbox/Test Value，除非明确授权 Live Mode。
-- Google Test 使用项目所有者控制的 Test User，Credential/Cookie/Token 不提交。
-- Visual `PASS` 需要固定 Browser/Environment 与人工 Review Diff，不能只生成 Snapshot。
-
-## 12. Phase 13 — Final Review / Delivery Closeout
-
-| ID      | Requirement          | 检查                    | 状态                    | 证据 / 备注                                                                                                                              |
-| ------- | -------------------- | ----------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| T13-001 | P0-10/P1-14          | Clean install           | PASS                    | 2026-08-16；临时干净副本 `pnpm install --frozen-lockfile --offline` 成功                                                                 |
-| T13-002 | P0-05/06/07/P1-08/09 | Migration contract      | PASS                    | 2026-08-16；`pnpm test` 30 files / 69 tests；Phase 5–8 SQL contract 均在套件中通过                                                       |
-| T13-003 | P1-14                | Build / Smoke           | PASS                    | 2026-08-16；隔离 `.phase13-next` production build 与 `pnpm test:e2e` 16 Chromium 场景成功                                                |
-| T13-004 | P0-02/03             | Manual demo rehearsal   | PASS                    | 2026-08-16；受控 Supabase 用户登录 Account 后在 `finally` 删除；不产生 AI/支付成本                                                       |
-| T13-005 | P1-13                | Code hygiene / advisory | PASS with bounded scope | `pnpm audit --prod --audit-level=high` 无已知漏洞；生产源未发现 Mock/Fake/Stub、死 CTA 或 `any`；完整 secret/license scanner 仍见 R13-03 |
-| T13-006 | P0-10                | Final traceability      | PASS with release risks | `docs/phase13-final-review.md`；R13-01（Demo/ownership/acceptance env）与 R13-02（clean DB replay）未被伪装为 PASS                       |
+Production URL、公开路由、SEO 端点、Google OAuth 到 Account、未登录 Generate Guard 和 Stripe Webhook 均有线上通过记录。真实 fal 生成和真实 Stripe Checkout 不在每次 smoke 中重复执行，以避免无必要的外部成本。

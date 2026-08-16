@@ -1,139 +1,105 @@
-# 设计方案
+# 交互与视觉设计
 
-状态：**信息架构、状态设计与项目内视觉基线已按 Candidate M 收口；源站视觉 Fidelity 仍为 `Requires access`**  
-视觉限制：**`docs/reference-screenshots/` 未提供，且当前环境没有可访问 Creen 的浏览器；不得声明源站视觉冻结或逐像素复刻**
+本文描述当前交付版本的页面结构、交互、状态和响应式行为。视觉复刻以已提供的 Creen 参考截图、本地页面审阅和可访问性验收为依据；不延伸为未取得线上页面的逐像素承诺。
 
-## 1. 设计原则
+## 页面结构与导航
 
-1. 一个 Studio、三种模态，用户不应感觉在三个无关应用之间切换。
-2. 公开浏览与 Studio 探索保持低门槛；真实 Generate 前要求登录。
-3. 提交前明确展示模型、参数、Credits 报价和可用余额。
-4. 将异步处理、失败恢复和刷新后状态保持视为主流程，而非边缘情况。
-5. 公开内容必须可由服务端读取，并通过清晰内链连接相邻搜索意图。
-6. 复刻布局逻辑和交互质量，不擅自复制商标、证言或长篇文案。
+全站使用统一 Header、主导航、账户入口和 Footer。桌面导航连接 Home、Studio、Features、Models、Pricing；移动端使用可展开菜单。Header 提供跳转主要内容的 Skip Link，Footer 提供 FAQ、About、Contact、Privacy、Terms、Refund。
 
-## 2. 已确认的信息架构
+公开页面包括 Home、Features、Models、Pricing、代表性生成 Landing Page 和 Support/Legal 页面。Studio 通过 `/studio` 提供创作入口，`/create` 重定向到 `/studio`。Login、Register、Account 与 Checkout Return 属于流程页面；Account 和 Checkout Return 要求有效会话。
 
-```text
-公开区域
-├─ Home
-├─ Studio / Create
-│  ├─ Image：Text → Image
-│  ├─ Video：Image → Video
-│  └─ Audio：Text → Speech
-├─ Features Hub
-├─ Models 代表性模板与页面
-├─ Pricing
-├─ 代表性 Landing Pages
-│  ├─ /ai-image-generator
-│  ├─ /ai-video-generator
-│  ├─ /text-to-image
-│  ├─ /image-to-video
-│  └─ 一个 Audio Landing Page
-├─ FAQ / About / Contact
-└─ Privacy / Terms / Refund / 404
+## Home
 
-身份与账户
-├─ Register
-├─ Login
-├─ Google callback / error
-└─ Account
-   ├─ History / Saved
-   ├─ Credits / Usage
-   └─ Subscription / Payment
-```
+Home 的首屏由统一 Header、Hero 标题与说明、`进入 Studio` 和 `查看 Credits` 两个 CTA 组成。Hero 下方复用 Studio Composer 作为快速创作入口，游客可以查看和填写输入。
 
-Header 具体结构、移动端菜单、Logo 位置和精确视觉 Token 仍为 `Requires access`。
+随后是三张带媒体的能力卡片：`Text to Image`、`Image to Video`、`Text to Speech`。Audio 卡片额外提供语音样本播放器。页面底部的 Workspace 区域列出版本化 Quote、独立模态和账户记录三项产品信息，最后由全站 Footer 收束。当前 Home 没有独立 FAQ 区块。
 
-## 3. 统一 Studio
+## Landing 与内容页
 
-桌面端区域：
+Landing Page 采用一致的内容层级：搜索意图 H1、创作入口或示例、能力说明、使用步骤、相关模型和参数、相邻工具内链、FAQ 与 Footer。不同页面使用不同标题、描述、关键词和内容，不以重复文本填充 URL。
 
-- 模态与模型选择；
-- Prompt 与参考图片输入；
-- 模型相关参数面板；
-- Credits 报价与余额；
-- Generate / Cancel / Retry 操作区；
-- 结果与 History 画布。
+## Features 与 Models
 
-三个模态互相独立，不强制 Image → Video → Audio 串行。登录、任务状态、Credits、History 与计费逻辑共用。游客可查看界面和填写输入；点击 Generate 时进入登录/注册引导，登录后再执行真实请求。
+Features 页面使用一个标题区和三张能力卡片，分别说明 Image、Video、Audio 的创作路径；每张卡片都提供进入 Studio 的 CTA。Models 页面使用列表式模型内容，展示三种模态对应的服务端固定模型、用途和简要说明；页面不提供浏览器侧的模型选择或价格编辑。
 
-移动端候选布局为纵向 Composer + Result，并使用参数 Sheet。该交互尚未由 Creen 视觉证据验证，不能标为视觉 `PASS`。
+## Studio 三模态
 
-## 4. Generation 状态
+Studio 以同一工作区承载三个独立 Tab：
 
-| 状态                    | 必要 UI 行为                                                          |
-| ----------------------- | --------------------------------------------------------------------- |
-| Idle                    | 说明可接受输入，展示默认模型和确定性报价或报价加载占位。              |
-| Invalid input           | 就地给出可执行的校验提示；禁用提交时必须说明原因。                    |
-| Requires authentication | 保留草稿并引导 Login/Register；不得先调用 Provider。                  |
-| Quoting                 | 价格版本确定前禁止提交，不显示猜测成本。                              |
-| Insufficient credits    | 保留草稿，展示所需/当前 Credits，并引导已确认的支付路径。             |
-| Reserving               | 锁定重复提交，并展示可恢复的进度。                                    |
-| Queued                  | 展示任务、模态/模型及非承诺式等待信息；Provider 支持时允许取消。      |
-| Processing              | 刷新后仍可恢复，允许安全离开；没有 Provider 依据时不伪造进度百分比。  |
-| Success                 | 预览、下载、可选跨模态复用、查看实际扣费并进入 History。              |
-| Provider failure        | 展示安全错误、允许使用新幂等键重试，并明确未扣费或补偿状态。          |
-| Timeout / unknown       | 说明正在对账；终态未确认前不得重复释放或扣费。                        |
-| Moderation rejected     | 展示安全策略提示，不暴露原始 Provider 错误或 Secret，并说明扣费处理。 |
+| 模式  | 输入               | 关键参数     | 结果/状态路径                        |
+| ----- | ------------------ | ------------ | ------------------------------------ |
+| Image | 图片描述           | 图像尺寸     | fal 任务，最终状态在 Account History |
+| Video | 参考图片、运动描述 | 5 秒或 10 秒 | fal 任务，最终状态在 Account History |
+| Audio | 朗读文本           | 可选声音标识 | fal 任务，最终状态在 Account History |
 
-## 5. Auth 状态
+Tab 切换会清除不匹配的报价。用户可以在登录前浏览和填写表单；获取 Quote、上传参考图片和 Generate 会触发登录要求。提交区域显示 Quote、Credits 成本和任务状态。
 
-Register/Login 必须覆盖：Idle、Validating、Submitting、成功跳转、无效凭据、重复邮箱、Google 取消、OAuth state/callback 失败、同邮箱冲突、Session 过期、Logout 和 Provider 不可用。
+Composer 的具体交互如下：Image 模式显示 Prompt 和图像尺寸；Video 模式显示参考图片上传、运动描述和 5/10 秒单选；Audio 模式显示朗读文本和可选声音标识。Quote 未获取时显示“获取报价”或访客的“登录后获取报价”，Quote 获取后显示成本并启用 Generate。Studio 当前不会在本页展示生成媒体；任务进入队列后提示到 History 查看最终状态。
 
-忘记密码 / Reset Password 为 P1；邮箱验证不作为 P0 阻塞项。
+## Pricing
 
-## 6. Credits 与支付状态
+Pricing 页面展示三种模态的 Credits 基准：Text-to-Image 每次 30 Credits、Image-to-Video 5 秒/10 秒分别为 2,800/5,600 Credits、Text-to-Speech 每 10 个字符 6 Credits。页面的主要 CTA 是进入 Account；Subscription 和 recurring Credit Pack 的实际 Checkout 按钮位于 Account 的 Billing 区域，而不是 Pricing 页面。
 
-UI 必须区分：
+## Auth
 
-- 可用、已预留和待对账 Credits；
-- Subscription Credits 与 recurring Credit Pack Credits；
-- 报价金额与最终结算金额；
-- Checkout 已创建、Payment Processing、Paid、Canceled、Failed 和 Webhook Delayed；
-- 内部 Provider 成本与用户 Credits 扣费。
+Login 和 Register 使用同一套 Auth Panel。两页都有返回首页和关闭入口、Google CTA、邮箱表单、状态消息以及互相切换链接。Login 表单包含邮箱和密码；Register 另外包含确认密码。提交时按钮显示 loading 并禁用，字段错误就地显示。成功后按安全的 `next` 站内路径跳转，缺省路径为 Account；注册项目若要求邮箱确认，会先显示确认提示。
 
-支付返回页在服务端记录确认前只显示“正在确认支付”。任何 Query 参数都不得直接改变余额。
+## Account
 
-## 7. 公开 Landing Page 模板
+Account 首先显示头像首字母、邮箱、登录方式和 User ID，并提供退出当前会话。Overview 依次显示可用/已预留 Credits、最近任务、Credits 账本、订阅与付款。最近任务最多展示最近 12 条，账本最多展示最近 12 条，付款和订阅分别展示最近 8 条；无记录时显示 Empty 状态及可执行入口。账户数据读取失败时显示安全错误，不把部分读取结果当成最终可信状态。
 
-根据已观察页面，采用以下代表性结构：
+## Auth、Pricing 与 Account
 
-1. 对应搜索意图的 H1 与价值主张；
-2. 创作入口或 Gallery/Examples；
-3. 具体能力和可验证指标；
-4. 简明步骤；
-5. 支持的模型与参数；
-6. 使用场景与相邻工具内链；
-7. FAQ；
-8. 共用的 Trust/Support Footer。
+- Login/Register 共享一致的表单布局、字段标签、错误提示和成功跳转；Google 登录使用独立 CTA；
+- Pricing 展示三种模态的 Credits 基准并链接到 Account；Subscription 与 recurring Credit Pack 的 Stripe Sandbox 按钮位于 Account Billing 区域；
+- Account 按区域展示余额、预留 Credits、Generation History、Credits Ledger、Payment 和 Subscription；数据只显示当前用户拥有的记录；
+- Checkout Return 显示 Paid、Canceled、Failed 或 Pending。Pending 期间明确提示等待可信 Webhook，不把浏览器返回当作付款成功。
 
-每个页面必须有真实不同的搜索意图与内容，不通过近似重复文案堆数量。
+## 状态设计
 
-## 8. 响应式与视觉 QA
+### 页面级状态
 
-| 类型    | Viewport | 用途                            |
-| ------- | -------- | ------------------------------- |
-| Desktop | 1440×900 | 主要视觉复刻与 Studio 布局      |
-| Tablet  | 1024×768 | 导航与面板收起行为              |
-| Mobile  | 390×844  | Composer、支付、Auth 与长内容流 |
+所有异步页面提供 Loading、Empty、Error 和 Success 状态。404 与错误页提供可返回公开页面的操作；未配置第三方凭据时，公开页面仍可渲染，受保护操作显示安全的不可用状态。
 
-获得访问权限或参考截图后，至少采集 Home、Create、Pricing、Auth、Image/Video/Audio 各一个 Landing Page，以及可访问的 Account/Payment 状态，并提取颜色、字体、间距、圆角、阴影和动效 Token。在此之前，这些项均为 `TBD`。
+### Studio 状态
 
-## 9. Accessibility 基线
+Studio 当前 UI 直接呈现以下状态：
 
-- 主要路径以 WCAG 2.2 AA 为目标；
-- 语义化标题与 Landmark；
-- 表单 Label 和可关联的错误说明；
-- Studio、Dialog、Auth 与 Payment 入口支持完整键盘操作；
-- 清晰 Focus，不仅依赖颜色表达 Credits/Error 状态；
-- 支持 reduced motion；
-- 媒体使用有效 Alt 或有意为空的 Alt；
-- 当生成音视频承担信息表达时提供字幕或 Transcript。
+| 状态                    | 页面表现                                     | 用户可执行操作            |
+| ----------------------- | -------------------------------------------- | ------------------------- |
+| Idle                    | 显示表单、尚未获取报价和 Quote/Generate 操作 | 修改输入、获取 Quote      |
+| Requires authentication | 跳转 Login，并带 `/studio` 返回路径          | 登录或注册                |
+| Quoting                 | 操作按钮显示处理中并禁用重复提交             | 等待报价或稍后重试        |
+| Invalid input / Error   | 表单或结果区域显示可执行错误                 | 修正输入、重新 Quote      |
+| Insufficient credits    | 显示“真实生成未提交”并提供 Account 入口      | 进入 Account 补充 Credits |
+| Submitting              | Generate 按钮显示提交中并锁定                | 等待服务端响应            |
+| Queued                  | 结果区域显示任务已提交和 History 提示        | 离开页面或到 Account 查看 |
+| Reconciliation required | 说明 Provider 已接受但状态正在对账           | 等待可信状态，不重复提交  |
 
-## 10. 视觉复刻风险
+Provider 的 `processing`、`succeeded`、`failed` 等终态由 Account 最近任务中的状态和失败代码呈现；当前 Studio 没有单独的实时结果预览状态。
 
-- 视觉证据仍不足，第一批 Foundation 只能建立可替换 Token 与布局基础，不能宣称完成复刻。
-- Creen 公共页面中的宣称、证言与商标不能在未确认权限时原样复制。
-- Stripe Hosted Checkout 是外部页面，工程可信度优先于站内像素一致。
-- 后续参考截图必须作为视觉实现与 QA 的事实依据；未验证项保持 `NOT EXECUTED`。
+### 支付状态
+
+Checkout 对用户显示 Pending、Paid、Canceled、Failed 和 Webhook delayed。支付成功和 Credits 变更只在服务端可信事件确认后展示。
+
+## 页面状态对照
+
+| 页面            | Loading              | Empty                           | Error                               | Success/终态                                            |
+| --------------- | -------------------- | ------------------------------- | ----------------------------------- | ------------------------------------------------------- |
+| Auth            | 提交按钮显示正在提交 | 不适用                          | 字段错误、认证服务错误、Google 错误 | 成功后跳转，注册确认可能显示成功提示                    |
+| Account         | 服务端页面加载       | 无任务、无账本、无付款/订阅记录 | 部分账户记录无法读取                | 余额、任务、账本和支付状态可读                          |
+| Checkout Return | Pending 文案         | 不适用                          | Failed 或 Canceled 文案             | Paid 文案，Credits 已由 Webhook 写入                    |
+| Studio          | Quoting、Submitting  | 未获取 Quote 的初始状态         | 输入、上传、Provider 或预留错误     | Queued/Reconciliation required 提示；最终状态在 Account |
+
+## 响应式布局
+
+Desktop 使用双栏或多栏工作区，Composer、结果区和报价区保持清晰层级；Tablet 收拢导航和参数面板；Mobile 使用纵向 Composer、结果和提交区，文件上传、Auth、Pricing 和长内容保持可滚动且不横向溢出。验收视口包括 1440x960、1024x768 和 390x844。
+
+## Keyboard 与 Accessibility
+
+- 语义化 Heading、Landmark、Label、Tablist、Tabpanel 和表单错误关联；
+- Studio Tab 支持 Arrow、Home、End 键切换，焦点移动到激活 Tab；
+- Skip Link、可见 Focus、按钮 Disabled 状态和 `aria-live` 状态消息覆盖主要路径；
+- 图片、视频和音频使用合适的替代文本或装饰性空 Alt；
+- 支持 reduced motion，状态信息不只依靠颜色表达；
+- Home axe 检查、桌面/移动浏览器场景和最小键盘流程均已验证。

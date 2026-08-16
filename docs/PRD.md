@@ -1,176 +1,155 @@
-# PRD — Creen.ai Clone
+# PRD - Creen.ai Clone
 
-状态：**Candidate M 已确认，P0 范围已冻结**  
-基线日期：**2026-08-14**
+## 产品定位
 
-## 1. 问题与目标
+Creen 是一个统一 AI 创作工作区。用户可在同一账户中创建图片、短视频和语音，使用统一 Credits 计费，并在账户页查看生成历史、余额和支付状态。
 
-独立实现一个 Creen.ai 复刻项目，用真实注册/登录、真实 Google 登录、真实跨模态 AI 调用与可审计 Credits、真实 Stripe Sandbox 支付、主要页面复刻、已落地的 SEO 逻辑和可追溯过程记录，证明完整 Web 产品交付能力。
+项目交付覆盖以下原始目标：复刻 Creen.ai 的主要页面与 SEO 逻辑，提供完整的邮箱密码与 Google 登录，支持真实跨模态生成和计费，支持 Stripe 支付，并保留可追溯的过程记录。
 
-目标不是复制每个已索引 URL、全部模型或受保护品牌资产，而是在 Candidate M 范围内代表性地复现核心产品、获客、计费与支付闭环。
+## 产品目标
 
-## 2. 招聘方原始五项要求
+产品将图片、视频和语音入口放在同一个可登录、可计费、可追踪的工作区中。用户可以从公开内容页开始探索，在 Studio 中准备输入，确认本次 Quote 后提交真实生成，并在 Account 中核对任务、Credits 和支付状态。
 
-项目最高优先级验收依据保持原文：
+## 用户场景
 
-1. `要接入完整的注册、登录（一方和三方谷歌登录）`
-2. `有完整的跨模态计费系统，要支持真实调用非 Mock`
-3. `支持 Stripe 支付`
-4. `各主要页面完整复刻，并且学习其 SEO 逻辑`
-5. `保留过程记录`
+| 用户               | 目标                 | 完成路径                                                   |
+| ------------------ | -------------------- | ---------------------------------------------------------- |
+| 访客               | 了解产品并开始创作   | 从公开页面进入 Studio，填写输入后登录                      |
+| 已登录创作者       | 生成图片、视频或语音 | 获取 Quote，确认余额，提交异步任务，查看结果与历史         |
+| Credits 不足的用户 | 补充可用 Credits     | 从账户页选择 Stripe Sandbox Checkout，等待可信支付状态更新 |
+| 回访用户           | 管理创作与支付记录   | 在 Account 查看任务、Ledger、Subscription 与 Payment 状态  |
 
-原始题目为 `复刻 creen.ai 网站`。下列 Traceability ID 只负责把原始要求拆成可测试单元，不增加新的招聘方要求。
+## 核心用户流程
 
-## 3. P0 — 原始明确要求
+### 创作流程
 
-| ID    | 原始要求            | 验收含义                                                                         |
-| ----- | ------------------- | -------------------------------------------------------------------------------- |
-| P0-01 | 复刻 Creen.ai       | 按现有证据复刻 Candidate M 的主要产品与内容结构。                                |
-| P0-02 | 完整注册            | 用户能以邮箱 + 密码真实注册并持久保存。                                          |
-| P0-03 | 完整一方登录        | 注册用户能登录、Logout、保持 Session，并访问受保护能力。                         |
-| P0-04 | Google 三方登录     | 真实 Google OAuth/OIDC 成功，基本失败/取消状态得到处理与验证。                   |
-| P0-05 | 完整跨模态计费      | 三种模态共用可审计的报价、余额检查、预留、结算/补偿和 Ledger。                   |
-| P0-06 | 真实调用、非 Mock   | Demo 路径调用三个真实 fal 模型并保存可验证的 Provider/Task 证据。                |
-| P0-07 | Stripe 支付         | Stripe Hosted Checkout Sandbox 的两个确认商品真实贯通。                          |
-| P0-08 | 主要页面完整复刻    | 确认页面满足内容、交互、状态与响应式验收；视觉未验证项不得虚报。                 |
-| P0-09 | 学习并实现 SEO 逻辑 | URL、内容、内链与 Metadata 逻辑实际进入代码并可验证。                            |
-| P0-10 | 保留过程记录        | Research、Requirements、Decisions、Plan、Implementation 与 Verification 可追溯。 |
+1. 访客从 Home、Features、Models 或 Landing Page 进入 Studio，也可以直接访问 `/studio`。
+2. 用户选择 Image、Video 或 Audio，填写对应输入；Image-to-Video 需要先上传参考图片。
+3. 未登录用户在获取 Quote、上传参考图片或 Generate 时进入 Login/Register，并携带安全的站内 `next` 路径。
+4. 登录用户获取与输入参数匹配的 Quote；余额不足时在调用 Provider 前收到阻断提示。
+5. 用户点击 Generate 后，系统先预留 Credits，再把任务提交到 Provider；页面显示 Queued 或 Reconciliation required，并提示到 Account 查看最终状态。
+6. Webhook 完成可信状态更新后，Account 的最近任务、Credits 账本和结果状态可供核对。
 
-## 4. P1 — 必要派生能力
+### 付款流程
 
-| ID    | 派生能力                                     | 来源            | 必要性                                                              |
-| ----- | -------------------------------------------- | --------------- | ------------------------------------------------------------------- |
-| P1-01 | 持久化 User、Identity 与 Session             | P0-02/03/04     | 真实注册与两种登录方式需要持久身份状态。                            |
-| P1-02 | 安全的一方凭据验证                           | P0-02/03        | 不能保存明文密码或只依赖客户端状态。                                |
-| P1-03 | Google Callback、state/CSRF 与安全链接策略   | P0-04           | 单独一个 Google 按钮不能建立可信身份流程。                          |
-| P1-04 | 受保护 Account/API、Logout 与过期处理        | P0-02/03/04     | 登录必须实际改变授权并能从 Session 过期恢复。                       |
-| P1-05 | 服务端 AI Adapter 与 Secret 隔离             | P0-06           | Provider Key 不得进入浏览器。                                       |
-| P1-06 | 跨模态统一 Generation Task                   | P0-05/06        | Image/Video/Audio 需要一致的归属、Lifecycle、Evidence 与 UI State。 |
-| P1-07 | 版本化报价与不可变 Ledger                    | P0-05           | 每笔消费必须保留提交时使用的模型、参数和价格版本。                  |
-| P1-08 | 幂等、预留/结算与失败补偿                    | P0-05/06        | 重试、并发、失败和重复 Callback 不得双扣或泄漏 Credits。            |
-| P1-09 | Stripe 服务端集成与可信同步                  | P0-07           | Redirect 可伪造，权益只能由签名验证后的异步状态驱动。               |
-| P1-10 | 页面/流程/复刻清单                           | P0-01/08        | “主要页面”必须有冻结清单和可验收标准。                              |
-| P1-11 | 服务端可读公开页面与路由级 SEO               | P0-09           | SEO 需要 Crawlable Content、Metadata 与 Route Graph。               |
-| P1-12 | Loading/Empty/Error/Success 与恢复状态       | P0-04/06/07/08  | 真实第三方服务异步且可能失败。                                      |
-| P1-13 | 环境/Secret 分离与最小权限                   | P0-04/06/07     | 真实集成带来敏感凭据与 Callback。                                   |
-| P1-14 | 可重复的 format/lint/typecheck/test/build/CI | P0-10 与全部 P0 | 用真实质量门禁回应第一题 B+ 反馈。                                  |
-| P1-15 | 获得视觉证据后的人工响应式 QA                | P0-08           | 当前证据不足以支持像素或交互复刻结论。                              |
-| P1-16 | Forgot / Reset Password                      | P0-02/03        | 作为 P1 完善密码登录恢复，但不阻塞 P0。                             |
+1. 用户从 Pricing 了解模态价格，进入 Account 的 Billing 区域。
+2. 用户选择 Subscription 或 recurring Credit Pack，应用创建 Stripe Hosted Checkout 并跳转到 Stripe。
+3. 用户返回 Checkout Return 后看到 Paid、Canceled、Failed 或 Pending；Pending 期间等待签名 Webhook。
+4. 只有可信支付事件更新 Payment、Subscription、Credit Lot 和 Ledger，用户再回到 Account 查看余额。
 
-## 5. 明确不属于当前 P0
+## 产品范围
 
-- 强制邮箱验证、手机号、短信验证码、MFA；
-- Guest Credit、匿名账户/余额与匿名 Credits 迁移；
-- Admin、社区、分享、收藏、Referral、邀请奖励、Team Workspace、企业账号；
-- 多 Provider、大量模型或强制模态串行；
-- 多级会员、优惠券、Trial、复杂 Proration、Refund/Invoice 后台、税务、多币种；
-- 大量 Programmatic SEO 页面、全量模型页或多语言页面；
-- 与已确认规模无关的高级基础设施。
+### 页面与信息架构
 
-如果后续要加入其中任一项，必须先说明它对应哪条原始要求、为何必需以及是否存在更简单方案。
+| 页面/端点         | Route                                                                                                | 访问条件                               | 核心用途                              | 主要操作                              |
+| ----------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------- | ------------------------------------- |
+| Home              | `/`                                                                                                  | 公开                                   | 介绍统一工作区和三种能力              | 进入 Studio、查看 Pricing             |
+| Studio            | `/studio`                                                                                            | 公开浏览；Quote/Upload/Generate 需登录 | 准备三模态输入并提交任务              | 切换模式、填写、上传、Quote、Generate |
+| Create Redirect   | `/create`                                                                                            | 公开                                   | 兼容创作入口                          | 重定向至 `/studio`                    |
+| Features          | `/features`                                                                                          | 公开                                   | 展示三条创作路径                      | 进入 Studio                           |
+| Models            | `/models`                                                                                            | 公开                                   | 展示当前固定模型和模态                | 查看模型用途                          |
+| Pricing           | `/pricing`                                                                                           | 公开                                   | 展示模态 Credits 基准                 | 进入 Account                          |
+| Marketing Landing | `/ai-image-generator`、`/ai-video-generator`、`/text-to-image`、`/image-to-video`、`/text-to-speech` | 公开                                   | 搜索意图内容、示例和 FAQ              | 进入 Studio、浏览相关页面             |
+| Support/Legal     | `/faq`、`/about`、`/contact`、`/privacy`、`/terms`、`/refund`                                        | 公开                                   | 帮助、公司说明和法律信息              | 阅读内容、使用内链                    |
+| Login             | `/login`                                                                                             | 未登录优先                             | 建立邮箱密码或 Google 会话            | 登录、Google、去 Register             |
+| Register          | `/register`                                                                                          | 未登录优先                             | 创建邮箱密码账户                      | 注册、Google、去 Login                |
+| OAuth Callback    | `/auth/callback`                                                                                     | OAuth 回调                             | 处理 Google code 或错误并返回站内路径 | 完成会话交换或显示错误                |
+| Account           | `/account`                                                                                           | 已登录                                 | 查看身份、余额、任务、账本和支付      | 退出、开始新创作、选择 Checkout       |
+| Checkout Return   | `/checkout/return`                                                                                   | 已登录                                 | 显示支付确认状态                      | 返回 Account                          |
+| 404               | 未匹配路由                                                                                           | 公开                                   | 处理不存在页面                        | 返回 Home                             |
+| SEO 端点          | `/robots.txt`、`/sitemap.xml`                                                                        | 公开                                   | 提供抓取边界和公开 URL                | 供搜索引擎读取                        |
 
-## 6. 已确认范围：Candidate M
+### Studio
 
-### 6.1 页面
+Studio 提供三个独立模式：
 
-- Home；
-- 统一 Studio/Create，含 Image、Video、Audio 三个模式；
-- Features Hub 与代表性 Models 模板/页面；
-- Pricing；
-- Login / Register；
-- Account：History/Saved、Credits/Usage、Subscriptions/Payments；
-- `/ai-image-generator`、`/ai-video-generator`、`/text-to-image`、`/image-to-video` 和一个 Audio Landing Page；
-- FAQ、About、Contact、Privacy、Terms、Refund；
-- 404 与 Stripe Return 页面。
+- `Text-to-Image`：输入图片描述并选择图像尺寸；
+- `Image-to-Video`：上传参考图片，输入视频描述并选择 5 秒或 10 秒时长；
+- `Text-to-Speech`：输入朗读文本，可选声音标识。
 
-精确 Header、响应式行为和视觉 Token 需参考截图或可访问浏览器后冻结。
+访客可浏览 Studio 和填写输入。获取可信 Quote、上传参考图片和提交真实生成需要登录。每次输入变更都会使已有 Quote 失效，避免按过期或不匹配的参数提交。
 
-### 6.2 认证与匿名策略
+输入限制来自当前服务端校验：图片 Prompt 最多 2,000 个字符；视频 Prompt 最多 2,000 个字符；语音文本最多 5,000 个字符；声音标识最多 128 个字符；参考图片仅支持 PNG、JPG、WebP，最大 10 MB。图片尺寸支持 `square`、`square_hd`、`portrait_4_3` 和 `landscape_4_3`。
 
-- 一方方式：邮箱 + 密码；三方方式：真实 Google OAuth。
-- P0：Register、Login、Google Login、Logout、Session Persistence、基本错误与必要 Route/API Guard。
-- 游客可浏览公开页面和 Studio，也可填写 Prompt/选择上传；真实 Generate 必须先登录。
-- Forgot / Reset Password 为 P1；邮箱验证不是 P0 强制项。
+Quote 期间显示确定的 Credits 成本和有效期。点击 Generate 后，Studio 显示提交中、队列中、余额不足或错误信息；最终 Provider 状态和失败代码在 Account 最近任务中呈现，当前 Studio 不内嵌结果预览或下载操作。
 
-### 6.3 AI 与 Generation
+### Auth
 
-分别实现且允许独立使用：
+- 支持邮箱密码注册、登录、会话保持与退出；
+- 支持 Google OAuth；
+- 注册包含邮箱、密码和确认密码；密码至少 8 个字符；登录包含邮箱和密码；
+- Account、Quote、上传、Generate 和 Checkout 仅限已登录用户；
+- 未登录的生成入口跳转到 Login，并保留安全的站内返回路径；已登录用户访问 Login/Register 会回到该路径；
+- 退出仅结束当前设备会话，并可从 Account 或 Header 操作。
 
-1. Text → Image；
-2. Image → Video；
-3. Text → Speech。
+### Generation 与 Credits
 
-使用 fal 单 Provider，每种模态一个真实模型。三个模型的准确 ID 在 AI Implementation 前按可用性、成本、稳定性、等待时间和官方文档做一次小范围确认，当前为 `TBD / Requires credentials`。
+- 三种模态通过 fal.ai 执行真实生成，不使用生产 Mock 结果；
+- 用户先获取与输入参数绑定、有效期 15 分钟的 Credits Quote；
+- 提交时系统检查余额、创建任务并预留 Credits；
+- Provider 成功时结算，失败时补偿；
+- Generation、Quote、Reservation、Lot 和 Ledger 共同形成可审计记录；
+- 相同用户、操作和请求键的重试返回持久化结果，不重复创建任务或扣费；
+- 用户同时拥有 Subscription 与 Credit Pack 时，优先消耗 Subscription Credits。
 
-### 6.4 Credits
+### Pricing 与 Stripe
 
-- 单一 User Credit Balance 与不可变 Credit Transaction/Ledger；
-- 不同 Generation 可配置不同 Credits 成本；
-- Generate 前显示价格并检查余额；
-- 不足时禁止真实调用；
-- 成功后结算，失败不错误扣费；
-- Image/Video/Audio 共用同一任务与计费体系。
+- Stripe 使用 Hosted Checkout Sandbox；
+- 商品仅限一个 Subscription 和一个 recurring Credit Pack；
+- 服务端读取并验证 Test Price 与其 `credits` metadata，浏览器不传金额、Price ID 或 Credits 数量；
+- Checkout Return 只显示支付状态，不能发放 Credits；
+- 仅 Stripe 签名 Webhook 产生可信 Payment、Subscription 和 Credits 更新。
 
-### 6.5 Stripe
+### Account 与 History
 
-- 环境：Stripe Sandbox / Test Environment；
-- 一个正常 Subscription 商品；
-- 一个 recurring Credit Pack；
-- 使用 Stripe Hosted Checkout；
-- 服务端签名 Webhook 更新 Payment/Subscription 与 Credits；
-- 浏览器 success URL 不能成为发放 Credits 的可信依据。
+Account 显示当前身份（邮箱、登录方式和 User ID）、可用与已预留 Credits、最近任务、不可变 Ledger、付款记录和订阅状态。最近任务展示模态、模型、状态、时间和失败代码；账本展示原因、时间和 Credit 增减；付款与订阅展示商品、状态、每期 Credits 和当前周期。用户只能访问自己的数据，页面提供退出和开始新创作入口。
 
-## 7. 代表性 Demo 路径
+### SEO 页面
 
-1. 游客从可抓取 Landing Page 进入 Studio。
-2. 选择任一模态并填写输入；点击 Generate 时进入 Login/Register。
-3. 完成邮箱密码登录；Google 登录在独立验收路径中真实验证。
-4. 服务端展示版本化 Credits 报价并检查统一余额。
-5. 余额不足时进入相应 Stripe Sandbox Hosted Checkout。
-6. 返回页显示 Pending，直到签名 Webhook 更新本地可信状态与 Credits。
-7. 提交一次真实 fal Generation，保存 Provider Task Reference 与 Result Reference。
-8. 在 History/Usage 查看任务、价格版本、实际扣费与 Ledger。
-9. 验证重复提交、Provider 失败和 Webhook 重放不会造成重复扣费。
+公开页面按搜索意图提供差异化内容、相关工具内链和 FAQ。每个公开页面有独立 Title、Description、Canonical 与单一 H1；公开路由进入 Sitemap，账户、回调、Checkout Return、Studio 与 API 不进入索引。
 
-## 8. 主要页面复刻验收
+## 非范围
 
-- **结构：** Route、Navigation、Content Hierarchy、主要 CTA 与关键 Section 符合已观察页面族。
-- **行为：** 关键 Control 与 Route Transition 可用，不存在无响应的主 CTA。
-- **状态：** 覆盖 Loading/Empty/Error/Success，以及未登录、Credits 不足、取消和重试。
-- **响应式：** 在批准的 Desktop/Tablet/Mobile Viewport 完成人工与截图比较。
-- **视觉：** 字体、间距、密度、颜色、媒体、Border/Radius/Shadow/Motion 必须由参考证据推导。
-- **内容/法律：** 使用本项目原创文案与资产，复现信息逻辑而非擅自复制受保护内容。
+- Stripe Live Mode、真实收款与退款处理；
+- 匿名 Credits、访客余额或匿名余额迁移；
+- MFA、手机号登录、团队工作区、管理员后台、邀请与 Referral；
+- 多 Provider、多币种、优惠券、税务、复杂订阅变更与账单后台；
+- 全量模型目录、全量程序化 SEO、多语言与 `hreflang`；
+- 独立媒体长期归档服务。
 
-在获得视觉证据并约定容差前，不能以“Pixel Perfect”作为已通过标准。
+## 业务规则
 
-## 9. SEO 验收
+1. 真实生成只在认证、输入校验和 Quote 校验通过后开始。
+2. 余额不足时，系统在调用 fal.ai 前拒绝生成。
+3. 成功任务必须有结果引用和结算记录；失败或取消按状态机处理预留与补偿。
+4. 任务状态未知时进入对账状态，不能凭猜测再次扣费或释放 Credits。
+5. Credits 使用整数最小单位；账本记录不可修改或删除。
+6. 支付权益只来自签名验证、幂等且满足时序规则的 Stripe 事件。
+7. 公开页面可索引；账户和交易流程不索引。
 
-- 主要公开 Route 可被服务端读取；
-- 每页独立 Title、Description、Canonical 与单一语义 H1；
-- `features/{slug}`、`models/{slug}` 通过 Typed Content 和复用模板生成已批准页面；
-- Landing Page 有真实差异化内容、FAQ 与相关工具内链；
-- 实现并验证 `robots`、`sitemap`、404、Redirect 与 Index Boundary；
-- 私有 Account、Callback、Checkout Return、Job Detail 与 API 不进入索引；
-- 首版单一主要语言并保持 i18n-ready，Locale 与 `hreflang` 仍为 P2/TBD。
+## 异常状态
 
-## 10. 数据持久化范围
+| 场景                            | 用户可见表现                                         | 用户可执行操作                          |
+| ------------------------------- | ---------------------------------------------------- | --------------------------------------- |
+| 未登录或会话过期                | 跳转 Login，并显示需要登录或会话过期提示             | 登录、注册后返回安全站内路径            |
+| 输入无效                        | 字段错误或请求错误提示，任务不会提交                 | 修正输入后重新获取 Quote                |
+| Quote 不可用/过期/参数不匹配    | 无法提交确定报价                                     | 修改输入并重新 Quote                    |
+| Credits 不足                    | 显示余额不足，真实生成未提交                         | 前往 Account 选择支付商品               |
+| 图片上传失败                    | 显示格式、大小或上传不可用提示                       | 更换 PNG/JPG/WebP 图片或稍后重试        |
+| Provider 提交失败               | 显示安全错误并释放/补偿预留                          | 使用新的请求再次尝试                    |
+| Provider 已接受但本地状态待对账 | 显示 Reconciliation required，避免重复提交           | 到 Account 等待可信状态                 |
+| 支付取消或失败                  | Checkout Return 显示 Canceled/Failed，不增加 Credits | 返回 Account，重新选择商品              |
+| Webhook 延迟                    | Checkout Return 显示 Pending                         | 等待服务端确认，不以 URL 参数判断已付款 |
+| 重复提交或重复 Webhook          | 返回既有任务或 replay，不重复扣费/发放               | 继续查看 Account 状态                   |
 
-必须持久保存 User/Auth Identity、Generation、Modality、Model、Input Metadata、Status、Credit Cost、Provider Task Reference、Result Reference、时间戳、Credit Balance/Ledger，以及必要 Stripe Customer/Subscription/Payment Reference。
+错误信息不暴露 Secret、原始 Provider 敏感内容或支付凭据。
 
-媒体文件是否长期保存取决于 fal URL 生命周期和 History 验收。若必须长期保存，优先评估 Supabase Storage；该具体策略仍为 `TBD`，但不得以临时 URL 假装满足长期 History。
+## 验收标准
 
-## 11. 外部条件与仍未确认项
-
-- `Requires credentials`：Supabase 项目、Google OAuth Client、fal API Key、Stripe Sandbox Account/Keys/Webhook Secret。
-- `Requires budget`：三个真实 fal 模型的小额验证与最终 Demo 调用。
-- `Requires access`：Creen 当前视觉截图、交互与响应式证据；可由用户提供 `docs/reference-screenshots/`。
-- `TBD`：三个 fal Model ID、媒体长期保存方案/期限、Deployment Platform/Region、同邮箱 Identity Collision 细节、最终视觉 Token 与容差。
-- 未授权 Live Stripe 收款；不得使用 Live Key。
-
-以上未决项不阻塞 Project Scaffold/Foundation，但会在相应 Implementation 阶段成为进入条件。
-
-## 12. Phase 13 交付判定
-
-Phase 13 仅对本 PRD 的五项原始要求做 Traceability Review，不改变 Candidate M、P0/P1 或非范围。每项必须链接到代码、测试或真实集成 Evidence；无法在本地自主完成的部署事项必须保留清晰 Risk Label，不能以本地服务或历史证据冒充最终线上验收。
-
-最终结论与风险位于 `docs/phase13-final-review.md`，发布前外部条件位于 `docs/deployment-notes.md`。
+- 用户可完成邮箱密码注册、登录、退出和 Google OAuth，并访问受保护账户；
+- 三种模态均可提交真实 fal.ai 任务，并保留可信任务和结果证据；
+- Credits Quote、预留、结算、补偿、幂等和账本在真实数据库验收中可对账；
+- Stripe Sandbox Checkout、签名 Webhook、取消/失败/重放与 Credits 发放规则可验证；
+- 主要公开页面、Studio、Pricing、Account 与 Support/Legal 页面可访问并具备响应式和关键状态；
+- SEO 元数据、Sitemap、Robots、Redirect、私有路由索引边界可验证；
+- 调研、决策、实施、测试和真实集成证据在过程记录中可追溯。
