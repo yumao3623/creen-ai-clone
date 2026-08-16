@@ -35,9 +35,9 @@
 
 ## 测试摘要
 
-已通过的验证包括：真实邮箱密码与 Google 登录、三种 fal 生成、Credits 并发/结算/补偿、Stripe Sandbox Checkout 与 Webhook 重放、公开路由与 SEO、键盘可访问性、生产构建和 Chromium E2E。
+已通过的验证包括：真实邮箱密码与 Google 登录、三种 fal 生成、Credits 并发/结算/补偿、Stripe Sandbox Checkout 与 Webhook 重放、公开路由与 SEO、键盘可访问性、生产构建、Chromium E2E，以及 GitHub Actions `Quality Gate #2`。
 
-当前没有记录为 `FAIL` 的正式测试项。空 Supabase 数据库完整 migration replay、托管 CI 触发，以及完整 secret/license 扫描仍为 `NOT EXECUTED`。详细矩阵见 [docs/test-cases.md](docs/test-cases.md)，脱敏真实集成证据见 [docs/real-integration](docs/real-integration)。
+当前没有记录为 `FAIL` 的正式测试项。GitHub Actions `Quality Gate #2` 已在提交 `92b8885` 上通过。空 Supabase 数据库完整 migration replay、完整 secret/license 扫描，以及部分第三方异常边界仍为 `NOT EXECUTED`。详细矩阵见 [docs/test-cases.md](docs/test-cases.md)，脱敏真实集成证据见 [docs/real-integration](docs/real-integration)。
 
 ## 项目结构
 
@@ -99,4 +99,4 @@ pnpm build
 - Stripe 仅使用 Sandbox/Test，不使用或声明 Stripe Live Mode；
 - 源站视觉审阅基于已提供的参考截图和本地验收，不主张未取得的线上逐像素比较；
 - fal 输出 URL 的长期保留策略未扩展为独立媒体归档能力；
-- 空数据库 migration replay、托管 CI 与完整 secret/license 扫描尚未执行。
+- 空数据库 migration replay 与完整 secret/license 扫描尚未执行。

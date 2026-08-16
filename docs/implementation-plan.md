@@ -131,4 +131,4 @@
 
 ## 3. 当前停止条件
 
-Phase 13 Final Review 与 R13-01 线上发布验收已完成，Phase 1–13 的 Candidate M 范围、Auth、fal、Credits、Stripe、页面和 SEO 契约未改变。Production Demo 已部署在 `https://creen-ai-clone.vercel.app`；Google OAuth 到 Account、Supabase callback、Stripe Sandbox webhook 签名交付、全部 indexable public routes、`/create -> /studio`、`/robots.txt`、`/sitemap.xml` 与未登录 Generate guard 均已通过线上验证。空 Supabase 数据库完整 migration replay、hosted CI 与 full secret/license scanner 均未执行，并保留明确风险标签。
+Phase 13 Final Review 与 R13-01 线上发布验收已完成，Phase 1–13 的 Candidate M 范围、Auth、fal、Credits、Stripe、页面和 SEO 契约未改变。Production Demo 已部署在 `https://creen-ai-clone.vercel.app`；Google OAuth 到 Account、Supabase callback、Stripe Sandbox webhook 签名交付、全部 indexable public routes、`/create -> /studio`、`/robots.txt`、`/sitemap.xml` 与未登录 Generate guard 均已通过线上验证。GitHub Actions `Quality Gate #2` 已在提交 `92b8885` 上通过。空 Supabase 数据库完整 migration replay 与 full secret/license scanner 仍未执行，并保留明确风险标签。

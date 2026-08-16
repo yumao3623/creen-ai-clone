@@ -4,11 +4,11 @@
 
 ## 结果摘要
 
-| 状态         | 数量/结论                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| PASS         | 认证、真实 AI、Credits、Stripe Sandbox、SEO、UI、构建与浏览器主要路径均有通过记录             |
-| FAIL         | 0                                                                                             |
-| NOT EXECUTED | 空数据库完整 migration replay、托管 CI 触发、完整 secret/license 扫描，以及部分第三方异常边界 |
+| 状态         | 数量/结论                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| PASS         | 认证、真实 AI、Credits、Stripe Sandbox、SEO、UI、构建、浏览器主要路径与 Hosted CI 均有通过记录 |
+| FAIL         | 0                                                                                              |
+| NOT EXECUTED | 空数据库完整 migration replay、完整 secret/license 扫描，以及部分第三方异常边界                |
 
 真实集成脱敏证据目录：[docs/real-integration](real-integration)。过程验证记录见 [evidence-index.md](evidence-index.md)。
 
@@ -116,16 +116,16 @@
 
 ## SEO、Build 与 Release
 
-| ID    | 检查                                                                    | 状态         | 证据                                            |
-| ----- | ----------------------------------------------------------------------- | ------------ | ----------------------------------------------- |
-| Q-001 | 每个公开页面的 Title、Description、Canonical、H1                        | PASS         | Typed SEO Contract 与 Production HTML           |
-| Q-002 | Robots、Sitemap、Noindex、404、Redirect、Internal Link                  | PASS         | Sitemap 公开 URL、私有边界与 `/create` Redirect |
-| Q-003 | Organization/WebSite JSON-LD 与可见内容一致                             | PASS         | Server HTML Contract                            |
-| Q-004 | `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build` | PASS         | 本地质量门禁；Production Build 成功             |
-| Q-005 | Chromium E2E                                                            | PASS         | 16 个场景通过                                   |
-| Q-006 | Hosted CI Workflow 实际触发                                             | NOT EXECUTED | 待 GitHub push 后首次 Hosted CI 实际运行验证    |
-| Q-007 | 完整 Secret 与 License Scanner                                          | NOT EXECUTED | 生产依赖 advisory 检查通过，完整扫描未配置/执行 |
-| Q-008 | Real 与 Stub/Fixture 证据分离                                           | PASS         | 生产路径无 Mock 结果；隔离 fixture 单独记录     |
+| ID    | 检查                                                                    | 状态         | 证据                                                 |
+| ----- | ----------------------------------------------------------------------- | ------------ | ---------------------------------------------------- |
+| Q-001 | 每个公开页面的 Title、Description、Canonical、H1                        | PASS         | Typed SEO Contract 与 Production HTML                |
+| Q-002 | Robots、Sitemap、Noindex、404、Redirect、Internal Link                  | PASS         | Sitemap 公开 URL、私有边界与 `/create` Redirect      |
+| Q-003 | Organization/WebSite JSON-LD 与可见内容一致                             | PASS         | Server HTML Contract                                 |
+| Q-004 | `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build` | PASS         | 本地质量门禁；Production Build 成功                  |
+| Q-005 | Chromium E2E                                                            | PASS         | 16 个场景通过                                        |
+| Q-006 | Hosted CI Workflow 实际触发                                             | PASS         | GitHub Actions `Quality Gate #2` 在 `92b8885` 上通过 |
+| Q-007 | 完整 Secret 与 License Scanner                                          | NOT EXECUTED | 生产依赖 advisory 检查通过，完整扫描未配置/执行      |
+| Q-008 | Real 与 Stub/Fixture 证据分离                                           | PASS         | 生产路径无 Mock 结果；隔离 fixture 单独记录          |
 
 ## 线上 Smoke
 

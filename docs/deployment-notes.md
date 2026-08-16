@@ -86,6 +86,6 @@ Stripe 使用 Test/Sandbox key，Webhook endpoint 为：
 
 - Stripe Live Mode 未授权，Production 只允许 Sandbox/Test；
 - 目标远端数据库已有迁移应用记录，空 Supabase 数据库的完整回放尚未执行；
-- Hosted CI 尚未触发，完整 secret/license scanner 尚未配置或执行；
+- GitHub Actions `Quality Gate #2` 已在提交 `92b8885` 上通过；完整 secret/license scanner 尚未配置或执行；
 - fal 输出 URL 的长期归档未作为额外存储服务实现；
 - 发布验收不记录 Credential、Cookie、Checkout Session URL 或 Signing Secret。
