@@ -11,6 +11,9 @@ import { MarketingPageTemplate } from "@/components/marketing-page";
 import { publicPageMetadata } from "@/lib/seo";
 
 const allPages = [...marketingPages, ...supportPages] as const;
+type PublicPageProps = {
+  params: Promise<{ slug: string }>;
+};
 
 export const dynamicParams = false;
 
@@ -20,7 +23,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: PageProps<"/[slug]">): Promise<Metadata> {
+}: PublicPageProps): Promise<Metadata> {
   const { slug } = await params;
   const page = marketingPageFor(slug) ?? supportPageFor(slug);
   if (!page) notFound();
@@ -33,7 +36,7 @@ export async function generateMetadata({
   });
 }
 
-export default async function PublicPage({ params }: PageProps<"/[slug]">) {
+export default async function PublicPage({ params }: PublicPageProps) {
   const { slug } = await params;
   const marketingPage = marketingPageFor(slug);
   if (marketingPage) return <MarketingPageTemplate page={marketingPage} />;
