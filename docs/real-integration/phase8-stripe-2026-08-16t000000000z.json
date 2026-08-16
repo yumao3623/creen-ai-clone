@@ -1,0 +1,62 @@
+{
+  "runId": "2026-08-16-phase8-stripe-sandbox",
+  "date": "2026-08-16",
+  "provider": "Stripe",
+  "environment": "Sandbox/Test",
+  "status": "passed",
+  "scope": {
+    "products": [
+      {
+        "productKey": "subscription",
+        "creditsPerPeriod": 25000
+      },
+      {
+        "productKey": "recurring_credit_pack",
+        "creditsPerPeriod": 7500
+      }
+    ],
+    "mode": "hosted_checkout",
+    "liveMode": false
+  },
+  "migrationsApplied": [
+    "202608160002_phase8_stripe",
+    "202608160003_phase8_stripe_invoice_paid_fix",
+    "202608160004_phase8_stripe_column_resolution_fix",
+    "202608160005_phase8_checkout_state_ordering_fix"
+  ],
+  "scenarios": {
+    "subscriptionCheckout": "passed",
+    "recurringCreditPackCheckout": "passed",
+    "checkoutCancel": "passed_no_credit_grant",
+    "cardDecline": "passed_no_credit_grant",
+    "threeDsAuthentication": "passed",
+    "bankLinkSandboxPayment": "passed",
+    "invoicePaidReplay": "passed_idempotent",
+    "subscriptionEventRetries": "passed_after_sequential_retry"
+  },
+  "remoteDatabase": {
+    "activeSubscriptionRows": 2,
+    "activeRecurringCreditPackRows": 2,
+    "stripeCreditLots": 4,
+    "stripeLedgerCreditEntries": 4,
+    "availableCredits": 65000,
+    "paidPayments": 4,
+    "pendingCancelOrDeclinePayments": 2,
+    "stripeEventProcessingErrors": 0
+  },
+  "localValidation": {
+    "vitest": "26 files / 61 tests passed",
+    "typecheck": "passed",
+    "eslint": "passed"
+  },
+  "redaction": {
+    "rawScreenshotsCommitted": false,
+    "excluded": [
+      "secret keys",
+      "webhook signing secrets",
+      "email addresses",
+      "checkout session URLs",
+      "unredacted Stripe CLI output"
+    ]
+  }
+}

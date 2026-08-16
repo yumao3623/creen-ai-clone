@@ -1,0 +1,58 @@
+{
+  "runId": "2026-08-15t080854324z",
+  "startedAt": "2026-08-15T08:08:54.387Z",
+  "budget": {
+    "approvedMaximumUsd": 5,
+    "estimatedMaximumUsd": 0.56,
+    "actualProviderChargeUsd": 0.2866,
+    "dashboardRoundedChargeUsd": 0.29,
+    "actualChargeNote": "The fal Usage dashboard line items total USD 0.2866 and display USD 0.29 after rounding.",
+    "billingEvidence": "phase6-fal-usage.png",
+    "localCreditsEffect": 0
+  },
+  "models": {
+    "image": "fal-ai/flux/schnell",
+    "video": "fal-ai/kling-video/v2.1/standard/image-to-video",
+    "speech": "fal-ai/minimax/speech-02-hd"
+  },
+  "status": "succeeded",
+  "results": {
+    "textToImage": {
+      "taskId": "a1814f79-c4aa-4da1-86c3-f448f35481c6",
+      "externalTaskId": "01a00477-96d8-7853-94c2-cbd7b465a452",
+      "resultUrl": "https://v3b.fal.media/files/b/0aa66976/ZUOiXBRhsOTs3GWPCHQeS.jpg",
+      "webhookReceiptId": "cc308ad6-1e89-4a5e-8ce8-d357bdc9a692",
+      "webhookReceivedAt": "2026-08-15T08:09:04.487625+00:00",
+      "providerStatus": "COMPLETED",
+      "providerCostUsd": 0.003
+    },
+    "textToSpeech": {
+      "taskId": "c6d43cff-7e2e-439b-853b-4f46ac6d336b",
+      "externalTaskId": "01a005c9-0047-7e73-99cd-a682a5eb4bcb",
+      "resultUrl": "https://v3b.fal.media/files/b/0aa6722e/Qts1tlrLyQjtFg8a0bhL0_speech.mp3",
+      "webhookReceiptId": "25866429-cafd-418d-af16-d596078c5e86",
+      "webhookReceivedAt": "2026-08-15T14:17:55.874433+00:00",
+      "providerCostUsd": 0.0036,
+      "inferenceTimeSeconds": null
+    },
+    "imageToVideo": {
+      "taskId": "74122019-5145-4726-9ed8-eeb3adcc7840",
+      "externalTaskId": "01a005c9-789e-7561-9d67-eab710e2adda",
+      "resultUrl": "https://v3b.fal.media/files/b/0aa67221/-GMJceb9EtASBFR1gNBEi_output.mp4",
+      "webhookReceiptId": "e7d89898-6a2f-40d7-87bd-fb9352398aa3",
+      "webhookReceivedAt": "2026-08-15T14:19:02.734931+00:00",
+      "providerCostUsd": 0.28,
+      "inferenceTimeSeconds": null
+    }
+  },
+  "webhookReplay": {
+    "eventCountBeforeAndAfter": 3,
+    "allReturnedWasReplayed": true
+  },
+  "notes": [
+    "The first submission exposed a remote generation task transition trigger defect after the image request was accepted.",
+    "Migration 202608150003_fix_generation_task_transition_trigger.sql repaired the trigger before the remaining modalities ran.",
+    "The completed image request was recovered by external task ID and was not submitted twice."
+  ],
+  "completedAt": "2026-08-15T14:19:06.567Z"
+}

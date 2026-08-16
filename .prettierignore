@@ -1,0 +1,9 @@
+.next
+coverage
+node_modules
+scaffold-tmp
+package-lock.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+task2-handoff
+docs/research-evidence/creen/*.txt

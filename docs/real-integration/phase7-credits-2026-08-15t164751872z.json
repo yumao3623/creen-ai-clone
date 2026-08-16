@@ -1,0 +1,46 @@
+{
+  "runId": "2026-08-15t164751872z",
+  "startedAt": "2026-08-15T16:47:51.898Z",
+  "providerCalls": 0,
+  "status": "passed",
+  "checks": {
+    "quote": {
+      "credits": 30,
+      "parameterKey": "default",
+      "priceVersionId": "d96ba584-a910-434e-bc14-d68b1aa8530c"
+    },
+    "insufficientBalance": "blocked_before_provider",
+    "concurrentReservation": {
+      "taskId": "13179d01-a82f-427c-84e3-f5ed35439153",
+      "replayCount": 1,
+      "available": 90,
+      "reserved": 30,
+      "subscriptionRemaining": 0,
+      "packRemaining": 90
+    },
+    "successSettlement": {
+      "status": "succeeded",
+      "replayed": true,
+      "available": 90,
+      "reserved": 0
+    },
+    "failureCompensation": {
+      "status": "failed",
+      "available": 90,
+      "reserved": 0,
+      "ledger": [
+        {
+          "entry_kind": "debit",
+          "amount_credits": 30,
+          "reason": "generation.reserve"
+        },
+        {
+          "entry_kind": "credit",
+          "amount_credits": 30,
+          "reason": "generation.compensation"
+        }
+      ]
+    }
+  },
+  "completedAt": "2026-08-15T16:48:06.191Z"
+}
