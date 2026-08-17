@@ -130,8 +130,8 @@
 | Q-002 | Robots、Sitemap、Noindex、404、Redirect、Internal Link                  | PASS         | Sitemap 公开 URL、私有边界与 `/create` Redirect      |
 | Q-003 | Organization/WebSite JSON-LD 与可见内容一致                             | PASS         | Server HTML Contract                                 |
 | Q-004 | `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build` | PASS         | 本地质量门禁；Production Build 成功                  |
-| Q-005 | Chromium E2E                                                            | PASS         | 15 个场景通过；1 个受控 Account 场景因未提供凭据跳过 |
-| Q-006 | Hosted CI Workflow 实际触发                                             | PASS         | GitHub Actions `Quality Gate #2` 在 `92b8885` 上通过 |
+| Q-005 | Chromium E2E                                                            | PASS         | 16 个场景通过；1 个受控 Account 场景因未提供凭据跳过 |
+| Q-006 | Hosted CI Workflow 实际触发                                             | PASS         | GitHub Actions `Quality Gate` 在 `9f748b0` 上通过    |
 | Q-007 | 完整 Secret 与 License Scanner                                          | NOT EXECUTED | 生产依赖 advisory 检查通过，完整扫描未配置/执行      |
 | Q-008 | Real 与 Stub/Fixture 证据分离                                           | PASS         | 生产路径无 Mock 结果；隔离 fixture 单独记录          |
 
