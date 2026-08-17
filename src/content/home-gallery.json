@@ -1,0 +1,187 @@
+{
+  "images": [
+    {
+      "id": "existing-sunrise-valley",
+      "src": "/media/phase11-gallery-sunrise-landscape.jpg",
+      "alt": "日出山谷与蜿蜒河流",
+      "prompt": "晨曦照亮辽阔山谷，蜿蜒的银色河流穿过野花前景，绯红与金色云层，电影感自然摄影，横向构图。",
+      "credits": 30
+    },
+    {
+      "id": "existing-macaw",
+      "src": "/media/phase11-gallery-animal.jpg",
+      "alt": "热带叶片间的金刚鹦鹉",
+      "prompt": "一只鲜红、钴蓝与金黄羽色的金刚鹦鹉停在热带阔叶间，潮湿雨林背景，野生动物编辑摄影。",
+      "credits": 30
+    },
+    {
+      "id": "existing-fashion",
+      "src": "/media/phase11-gallery-fashion.jpg",
+      "alt": "蓝色背景中的时尚人物肖像",
+      "prompt": "人物身着虹彩紫珊瑚色夹克，电光蓝摄影棚背景，自然肤质与雕塑感彩色光线，时尚杂志摄影。",
+      "credits": 30
+    },
+    {
+      "id": "existing-landscape",
+      "src": "/media/phase11-gallery-landscape.jpg",
+      "alt": "广阔的自然风景",
+      "prompt": "广阔的自然山地风景，层叠地貌延伸至远方，清晰大气与真实摄影质感。",
+      "credits": 30
+    },
+    {
+      "id": "existing-portrait",
+      "src": "/media/phase11-gallery-portrait.jpg",
+      "alt": "摄影棚人物肖像",
+      "prompt": "高级摄影棚人物肖像，深色背景、柔和轮廓光与克制的时尚编辑风格。",
+      "credits": 30
+    },
+    {
+      "id": "existing-still-life",
+      "src": "/media/phase11-gallery-still-life.jpg",
+      "alt": "静物创意摄影",
+      "prompt": "现代静物创意摄影，精致材质、受控棚拍光线与简洁构图。",
+      "credits": 30
+    },
+    {
+      "id": "new-neon-rain",
+      "src": "/media/home-gallery-neon-rain.jpg",
+      "alt": "霓虹雨夜街头的未来感场景",
+      "prompt": "雨夜的未来城市街头，湿润路面映出青蓝与珊瑚色霓虹，一位撑透明伞的行人从画面远处经过，电影级街头摄影，竖向构图，无文字、无标志、无水印。",
+      "generationPrompt": "Cinematic rainy night in a futuristic city, turquoise and coral neon reflections on wet pavement, a person holding a transparent umbrella in the distance, vivid editorial street photography, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-paper-world",
+      "src": "/media/home-gallery-paper-world.jpg",
+      "alt": "纸艺山川与云朵的微缩景观",
+      "prompt": "精巧的纸艺微缩山川世界，层层剪纸山峰、漂浮云朵和一条明亮河流，工作室柔光，细腻纸张纤维，俯视构图，无文字、无标志、无水印。",
+      "generationPrompt": "A vibrant paper-cut miniature world with layered colorful mountains, a bright blue river and floating clouds, top-down studio photography, detailed paper texture, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-coral-reef",
+      "src": "/media/home-gallery-coral-reef.jpg",
+      "alt": "阳光穿过海面的珊瑚礁",
+      "prompt": "阳光穿过清澈海面照亮多彩珊瑚礁，一只海龟在珊瑚上方平静游过，自然纪录片水下摄影，横向构图，无文字、无标志、无水印。",
+      "generationPrompt": "Sunlight through crystal-clear tropical water illuminating a vibrant coral reef, one sea turtle gliding calmly above the coral, colorful underwater nature documentary photography, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-ceramic-studio",
+      "src": "/media/home-gallery-ceramic-studio.jpg",
+      "alt": "手工陶瓷与阳光工作台",
+      "prompt": "明亮工作室里的手工陶瓷静物，一只釉面青绿陶罐、素色亚麻布和木质工作台，午后侧光，生活方式编辑摄影，方形构图，无文字、无标志、无水印。",
+      "generationPrompt": "Handmade ceramic still life in a bright studio: a glossy teal vase, natural linen and a wooden worktable in warm afternoon side light, colorful lifestyle editorial photography, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-orbital-garden",
+      "src": "/media/home-gallery-orbital-garden.jpg",
+      "alt": "太空站内的植物温室",
+      "prompt": "环绕行星运行的空间站植物温室，透明穹顶外可见蓝色星球，室内蕨类与藤蔓被温暖人造阳光照亮，电影概念艺术，竖向构图，无文字、无标志、无水印。",
+      "generationPrompt": "A lush botanical greenhouse inside an orbital space station, warm sunlight through a transparent dome, a blue planet visible outside, ferns and vines, vivid cinematic concept art, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-dancer-silk",
+      "src": "/media/home-gallery-dancer-silk.jpg",
+      "alt": "丝绸光影中的当代舞者",
+      "prompt": "当代舞者被深蓝与朱红色半透明丝绸环绕，动态定格，戏剧化棚拍灯光，艺术时尚摄影，竖向构图，无文字、无标志、无水印。",
+      "generationPrompt": "A contemporary dancer wrapped in flowing translucent deep-blue and vermilion silk, dramatic studio lighting, frozen movement, colorful artistic fashion photography, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-desert-arch",
+      "src": "/media/home-gallery-desert-arch.jpg",
+      "alt": "沙漠中的极简拱门建筑",
+      "prompt": "日落时分的沙漠极简建筑，一座巨大的浅色石材拱门投下长阴影，远处细沙与低矮山脊，建筑摄影，横向构图，无文字、无标志、无水印。",
+      "generationPrompt": "Minimalist desert architecture at sunset: one monumental pale stone arch casting a long shadow across fine sand, low distant ridges, warm colorful architectural photography, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-night-market",
+      "src": "/media/home-gallery-night-market.jpg",
+      "alt": "夜市灯笼与食物摊位",
+      "prompt": "夜晚街市的温暖灯笼、蒸汽与丰富食材特写，浅景深、热闹而不拥挤的氛围，电影美食摄影，横向构图，无文字、无标志、无水印。",
+      "generationPrompt": "A vibrant night market food stall with warm lanterns, rising steam and colorful ingredients in close-up, cinematic food photography, lively but uncrowded, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-glass-botanical",
+      "src": "/media/home-gallery-glass-botanical.jpg",
+      "alt": "玻璃容器中的发光植物",
+      "prompt": "深色背景中的玻璃植物标本，半透明叶脉透出柔和青绿色微光，精致微距摄影，克制而未来感的静物构图，无文字、无标志、无水印。",
+      "generationPrompt": "Glowing botanical specimen in a glass vessel against a dark background, translucent leaf veins with soft cyan-green light, refined macro still life photography, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    },
+    {
+      "id": "new-foggy-lake",
+      "src": "/media/home-gallery-foggy-lake.jpg",
+      "alt": "雾气中的山间湖面与木舟",
+      "prompt": "清晨薄雾笼罩的山间湖面，一只木舟静静漂在水上，冷灰蓝色调与柔和倒影，自然电影摄影，横向构图，无文字、无标志、无水印。",
+      "generationPrompt": "A quiet wooden canoe drifting on a misty mountain lake at dawn, cool blue-gray palette and soft reflections, cinematic nature photography, no text, no logo, no watermark, landscape 4:3.",
+      "credits": 30
+    }
+  ],
+  "videos": [
+    {
+      "id": "existing-studio-wave",
+      "src": "/media/phase11-studio.mp4",
+      "poster": "/media/phase11-studio.jpg",
+      "alt": "发光波形在工作台上缓慢脉动",
+      "prompt": "青绿色发光波形在深色工作台上轻轻脉动，镜头平稳缓慢向前推进，简洁的工作室光线，无文字、无标志。",
+      "credits": 2800,
+      "duration": "5"
+    },
+    {
+      "id": "new-neon-rain-motion",
+      "src": "/media/home-video-neon-rain.mp4",
+      "poster": "/media/home-video-neon-rain.jpg",
+      "alt": "雨夜霓虹城市中的伞与倒影",
+      "prompt": "雨滴落在霓虹街道的积水中，青蓝与珊瑚色倒影轻微波动，透明雨伞缓慢掠过画面，镜头稳定推进，无文字、无标志。",
+      "credits": 2800,
+      "duration": "5",
+      "sourceImage": "new-neon-rain"
+    },
+    {
+      "id": "new-coral-reef-motion",
+      "src": "/media/home-video-coral-reef.mp4",
+      "poster": "/media/home-video-coral-reef.jpg",
+      "alt": "珊瑚礁上方缓慢游动的海龟",
+      "prompt": "海龟从珊瑚礁上方平静游过，水面焦散光线轻轻移动，镜头缓慢向前漂浮，无文字、无标志。",
+      "credits": 2800,
+      "duration": "5",
+      "sourceImage": "new-coral-reef"
+    },
+    {
+      "id": "new-orbital-garden-motion",
+      "src": "/media/home-video-orbital-garden.mp4",
+      "poster": "/media/home-video-orbital-garden.jpg",
+      "alt": "轨道温室里摇曳的植物与窗外行星",
+      "prompt": "空间站温室里的叶片随微弱气流轻轻摇曳，穹顶外的行星缓慢移动，镜头平稳横移，无文字、无标志。",
+      "credits": 2800,
+      "duration": "5",
+      "sourceImage": "new-orbital-garden"
+    },
+    {
+      "id": "new-dancer-silk-motion",
+      "src": "/media/home-video-dancer-silk.mp4",
+      "poster": "/media/home-video-dancer-silk.jpg",
+      "alt": "舞者与丝绸在舞台光影中缓慢运动",
+      "prompt": "舞者缓慢转身，深蓝与朱红丝绸在空气中流动，戏剧化侧光保持稳定，镜头轻微环绕，无文字、无标志。",
+      "credits": 2800,
+      "duration": "5",
+      "sourceImage": "new-dancer-silk"
+    },
+    {
+      "id": "new-foggy-lake-motion",
+      "src": "/media/home-video-foggy-lake.mp4",
+      "poster": "/media/home-video-foggy-lake.jpg",
+      "alt": "雾气湖面上的木舟与缓慢波纹",
+      "prompt": "湖面上的木舟轻轻漂移，薄雾缓慢穿过远山，水面泛起细微波纹，镜头安静向前移动，无文字、无标志。",
+      "credits": 2800,
+      "duration": "5",
+      "sourceImage": "new-foggy-lake"
+    }
+  ]
+}

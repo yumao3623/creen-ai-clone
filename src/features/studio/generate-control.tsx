@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Modality = "text_to_image" | "image_to_video" | "text_to_speech";
@@ -19,13 +19,18 @@ type ApiResult = Readonly<{
   error?: Readonly<{ code?: string; message?: string }>;
 }>;
 
+type InspirationEvent = Readonly<{
+  modality: "text_to_image" | "image_to_video";
+  prompt: string;
+}>;
+
 const modes = [
   ["text_to_image", "图片", "文本生成图片"],
   ["image_to_video", "视频", "图片生成视频"],
   ["text_to_speech", "语音", "文本生成语音"],
 ] as const;
 
-const defaultImagePrompt = "柔和绿光照亮的安静未来创作工作室";
+const defaultImagePrompt = "";
 
 function messageFor(error: unknown) {
   return error instanceof Error
@@ -52,6 +57,25 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
     "idle" | "quoting" | "submitting" | "queued" | "error" | "insufficient"
   >("idle");
   const [message, setMessage] = useState<string>();
+
+  useEffect(() => {
+    function applyInspiration(event: Event) {
+      const detail = (event as CustomEvent<InspirationEvent>).detail;
+      if (!detail?.prompt) return;
+
+      setModality(detail.modality);
+      if (detail.modality === "text_to_image") {
+        setImagePrompt(detail.prompt);
+      } else {
+        setVideoPrompt(detail.prompt);
+      }
+      resetQuote();
+    }
+
+    window.addEventListener("creen:apply-inspiration", applyInspiration);
+    return () =>
+      window.removeEventListener("creen:apply-inspiration", applyInspiration);
+  }, []);
 
   function resetQuote() {
     setQuote(undefined);
@@ -237,7 +261,7 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
   const pending = state === "quoting" || state === "submitting";
 
   return (
-    <div className="studio-workbench">
+    <div className="studio-workbench" data-modality={modality}>
       <div className="studio-mode-tabs" role="tablist" aria-label="创作模式">
         {modes.map(([value, label, description], index) => (
           <button
@@ -276,6 +300,7 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
                   setImagePrompt(event.target.value);
                   resetQuote();
                 }}
+                placeholder="描述您想创作的内容"
                 rows={7}
                 value={imagePrompt}
               />
@@ -385,7 +410,11 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
         ) : null}
       </div>
 
-      <aside className="studio-result" aria-live="polite">
+      <aside
+        className="studio-result"
+        aria-live="polite"
+        data-visible={message ? "true" : "false"}
+      >
         <p className="eyebrow">生成状态</p>
         <h2>{state === "queued" ? "任务已提交" : "准备开始创作"}</h2>
         <p>{message ?? "获取报价后，系统才会允许创建任务并预留 Credits。"}</p>

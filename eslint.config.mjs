@@ -7,7 +7,9 @@ export default defineConfig([
   ...nextTs,
   globalIgnores([
     ".next/**",
+    ".next-ci/**",
     ".phase11-next/**",
+    ".phase12-next/**",
     ".phase13-next/**",
     "coverage/**",
     "out/**",

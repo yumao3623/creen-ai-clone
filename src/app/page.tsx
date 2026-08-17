@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { GenerateControl } from "@/features/studio/generate-control";
+import { HomeInspirationGallery } from "@/components/home-inspiration-gallery";
 import { getAuthenticatedUser } from "@/integrations/supabase/server";
 import { publicPageMetadata } from "@/lib/seo";
 
@@ -36,15 +37,6 @@ const capabilities = [
     accent: "coral",
     image: "/media/phase11-gallery-fashion.jpg",
   },
-] as const;
-
-const galleryMedia = [
-  "/media/phase11-gallery-sunrise-landscape.jpg",
-  "/media/phase11-gallery-animal.jpg",
-  "/media/phase11-gallery-fashion.jpg",
-  "/media/phase11-gallery-landscape.jpg",
-  "/media/phase11-gallery-portrait.jpg",
-  "/media/phase11-gallery-still-life.jpg",
 ] as const;
 
 const workflowSteps = [
@@ -86,6 +78,39 @@ const faqItems = [
     "付款完成后会立即增加余额吗？",
     "不会。Stripe Sandbox 的余额变更只来自已验证签名的 Webhook，不以浏览器返回页为准。",
   ],
+  [
+    "目前可以创作哪些内容？",
+    "当前工作区支持文本生成图片、图片生成视频和文本生成语音；各模式使用独立输入，并共享同一账户与 Credits 账本。",
+  ],
+  [
+    "为什么要先获取 Quote？",
+    "Quote 由服务端根据当前模式和参数生成，用于在提交前确认本次 Credits 成本与有效期。",
+  ],
+  [
+    "生成完成后在哪里查看结果？",
+    "任务会异步处理。提交后可在账户页的最近任务和历史记录中查看可信状态。",
+  ],
+  [
+    "可以使用 Google 登录吗？",
+    "可以。除邮箱和密码外，当前项目也提供 Google 登录入口；实际可用性取决于已配置的 OAuth 环境。",
+  ],
+  [
+    "游客可以直接生成吗？",
+    "游客可以浏览、切换模式和填写输入；获取可信 Quote、上传视频参考图及提交真实生成前需要登录。",
+  ],
+  [
+    "生成失败会怎样处理？",
+    "任务状态和 Credits 由服务端状态机记录；失败场景按既有补偿规则处理，并以账户账本中的可信记录为准。",
+  ],
+] as const;
+
+const useCases = [
+  ["产品概念图", "将产品卖点转成可讨论的第一版视觉方向。", "文本生成图片"],
+  ["社交媒体视觉", "用同一个视觉提示快速准备一组内容素材。", "文本生成图片"],
+  ["封面动效", "上传封面图并描述镜头运动，生成短视频片段。", "图片生成视频"],
+  ["课程配图", "把抽象主题变成更易理解的图像草稿。", "文本生成图片"],
+  ["旁白草稿", "输入文案并生成用于审核的语音版本。", "文本生成语音"],
+  ["旅程开场", "以一张旅行照片为参考，制作简短的动态片头。", "图片生成视频"],
 ] as const;
 
 export default async function HomePage() {
@@ -95,20 +120,9 @@ export default async function HomePage() {
     <main className="home-page" id="main-content" tabIndex={-1}>
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero__content">
-          <p className="eyebrow">统一 AI 创作工作区</p>
-          <h1 id="hero-title">一个工作区，完成图片、视频与音频创作</h1>
-          <p className="hero__copy">
-            在同一个工作区中完成图片、视频与语音创作。每次生成在服务端确认登录、
-            模型输入和 Credits 报价。
-          </p>
-          <div className="hero__actions">
-            <Link className="button button--primary" href="/studio">
-              进入创作工作区
-            </Link>
-            <Link className="button button--secondary" href="/pricing">
-              查看 Credits
-            </Link>
-          </div>
+          <h1 id="hero-title">
+            Creen AI：一个工作区，完成图片、视频与音频创作
+          </h1>
         </div>
       </section>
 
@@ -116,23 +130,7 @@ export default async function HomePage() {
         <GenerateControl authenticated={Boolean(user)} />
       </section>
 
-      <section className="home-gallery" aria-label="创作灵感">
-        {galleryMedia.map((src, index) => (
-          <div
-            className={`home-gallery__item home-gallery__item--${index + 1}`}
-            key={src}
-          >
-            <Image
-              alt=""
-              aria-hidden="true"
-              fill
-              loading="eager"
-              sizes="(max-width: 48rem) 50vw, 20vw"
-              src={src}
-            />
-          </div>
-        ))}
-      </section>
+      <HomeInspirationGallery />
 
       <section
         className="home-introduction"
@@ -204,6 +202,25 @@ export default async function HomePage() {
             <span>{label}</span>
           </div>
         ))}
+      </section>
+
+      <section className="home-use-cases" aria-labelledby="use-cases-title">
+        <div className="section-heading">
+          <p className="eyebrow">适用场景</p>
+          <h2 id="use-cases-title">用已接入的能力完成日常创作</h2>
+          <p>以下是当前三种创作模式可直接覆盖的典型工作流。</p>
+        </div>
+        <div>
+          {useCases.map(([title, description, mode], index) => (
+            <article key={title}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <p>{mode}</p>
+              <h3>{title}</h3>
+              <p>{description}</p>
+              <Link href="/studio">开始创作</Link>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="home-models" aria-labelledby="models-title">
