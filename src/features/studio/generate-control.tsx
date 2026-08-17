@@ -11,6 +11,11 @@ type Quote = Readonly<{
   expiresAt: string;
 }>;
 
+type QuoteSession = Readonly<{
+  clientKey: string;
+  quote: Quote;
+}>;
+
 type ApiResult = Readonly<{
   quote?: Quote;
   taskId?: string;
@@ -25,9 +30,9 @@ type InspirationEvent = Readonly<{
 }>;
 
 const modes = [
-  ["text_to_image", "图片", "文本生成图片"],
-  ["image_to_video", "视频", "图片生成视频"],
-  ["text_to_speech", "语音", "文本生成语音"],
+  ["text_to_image", "图片", "文本生成图片", "▣"],
+  ["image_to_video", "视频", "图片生成视频", "▰"],
+  ["text_to_speech", "音讯", "文本生成语音", "◒"],
 ] as const;
 
 const defaultImagePrompt = "";
@@ -48,8 +53,7 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
   const [videoPrompt, setVideoPrompt] = useState("镜头缓慢穿过画面中的场景");
   const [videoDuration, setVideoDuration] = useState("5");
   const [inputUrl, setInputUrl] = useState<string>();
-  const [speechText, setSpeechText] =
-    useState("欢迎来到更安静、更专注的创作方式。");
+  const [speechText, setSpeechText] = useState("");
   const [voiceId, setVoiceId] = useState("");
   const [quote, setQuote] = useState<Quote>();
   const [clientKey, setClientKey] = useState<string>();
@@ -177,57 +181,66 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
     }
   }
 
-  async function requestQuote() {
+  async function requestQuote(
+    generationInput?: unknown,
+  ): Promise<QuoteSession | undefined> {
     if (!authenticated) {
       router.push("/login?next=%2Fstudio");
-      return;
+      return undefined;
     }
 
     setState("quoting");
     setMessage(undefined);
     try {
-      const generationInput = await input();
+      const preparedInput = generationInput ?? (await input());
       const response = await fetch("/api/quotes", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(generationInput),
+        body: JSON.stringify(preparedInput),
       });
       const result = await readResult(response);
       if (response.status === 401) {
         router.push("/login?next=%2Fstudio");
-        return;
+        return undefined;
       }
       if (!response.ok || !result.quote) {
         throw new Error("暂时无法获取确定报价，请稍后重试。");
       }
       setQuote(result.quote);
-      setClientKey(crypto.randomUUID());
+      const nextClientKey = crypto.randomUUID();
+      setClientKey(nextClientKey);
       setState("idle");
-      setMessage(
-        `报价已锁定：${result.quote.creditsCost} Credits，15 分钟内有效。`,
-      );
+      setMessage("已准备好，可以直接生成。");
+      return { clientKey: nextClientKey, quote: result.quote };
     } catch (error) {
       setState("error");
       setMessage(messageFor(error));
+      return undefined;
     }
   }
 
   async function submit() {
-    if (!quote || !clientKey) {
-      await requestQuote();
+    if (!authenticated) {
+      router.push("/login?next=%2Fstudio");
       return;
     }
 
-    setState("submitting");
-    setMessage(undefined);
     try {
       const generationInput = await input();
+      const session =
+        quote && clientKey
+          ? { quote, clientKey }
+          : await requestQuote(generationInput);
+      if (!session) return;
+
+      setState("submitting");
+      setMessage(undefined);
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          clientKey,
-          quoteId: quote.quoteId,
+          clientKey: session.clientKey,
+          quoteId: session.quote.quoteId,
           input: generationInput,
         }),
       });
@@ -259,31 +272,64 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
   }
 
   const pending = state === "quoting" || state === "submitting";
+  const previewCredits =
+    modality === "text_to_image"
+      ? 30
+      : modality === "image_to_video"
+        ? videoDuration === "10"
+          ? 5_600
+          : 2_800
+        : Math.max(1, Math.ceil(Array.from(speechText).length / 10)) * 6;
 
   return (
     <div className="studio-workbench" data-modality={modality}>
-      <div className="studio-mode-tabs" role="tablist" aria-label="创作模式">
-        {modes.map(([value, label, description], index) => (
-          <button
-            aria-controls={`${value}-panel`}
-            aria-selected={modality === value}
-            className={modality === value ? "is-active" : undefined}
-            key={value}
-            onClick={() => chooseMode(value)}
-            onKeyDown={(event) => handleTabKeyDown(event, index)}
-            ref={(element) => {
-              tabRefs.current[index] = element;
-            }}
-            role="tab"
-            id={`${value}-tab`}
-            tabIndex={modality === value ? 0 : -1}
-            type="button"
-          >
-            <span>{label}</span>
-            <small>{description}</small>
-          </button>
-        ))}
+      <div className="studio-workbench__topline">
+        <div className="studio-mode-tabs" role="tablist" aria-label="创作模式">
+          {modes.map(([value, label, description, icon], index) => (
+            <button
+              aria-controls={`${value}-panel`}
+              aria-selected={modality === value}
+              className={modality === value ? "is-active" : undefined}
+              key={value}
+              onClick={() => chooseMode(value)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+              ref={(element) => {
+                tabRefs.current[index] = element;
+              }}
+              role="tab"
+              id={`${value}-tab`}
+              tabIndex={modality === value ? 0 : -1}
+              type="button"
+            >
+              <span className="studio-mode-tabs__icon" aria-hidden="true">
+                {icon}
+              </span>
+              <span>{label}</span>
+              <small>{description}</small>
+            </button>
+          ))}
+          <span className="studio-mode-tabs__disabled" aria-hidden="true">
+            <span className="studio-mode-tabs__icon">⌁</span>
+            <span>视频编辑</span>
+          </span>
+        </div>
+        <button className="studio-discover" type="button">
+          <span aria-hidden="true">✦</span> 探索
+        </button>
       </div>
+
+      {modality === "image_to_video" ? (
+        <div className="studio-secondary-tabs" aria-label="视频工具">
+          <span className="is-active">生成</span>
+          <span>动作控制</span>
+          <span>
+            唇型同步 <b>NEW</b>
+          </span>
+          <span>
+            数位人 <b>NEW</b>
+          </span>
+        </div>
+      ) : null}
 
       <div
         aria-labelledby={`${modality}-tab`}
@@ -292,7 +338,11 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
         role="tabpanel"
       >
         {modality === "text_to_image" ? (
-          <>
+          <div className="studio-input-row">
+            <div className="studio-upload-tile" aria-hidden="true">
+              <span>+</span>
+              <small>图片</small>
+            </div>
             <label className="field studio-prompt">
               <span>描述图片</span>
               <textarea
@@ -305,29 +355,14 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
                 value={imagePrompt}
               />
             </label>
-            <label className="field">
-              <span>图像尺寸</span>
-              <select
-                onChange={(event) => {
-                  setImageSize(event.target.value);
-                  resetQuote();
-                }}
-                value={imageSize}
-              >
-                <option value="square">方形</option>
-                <option value="square_hd">高清方形</option>
-                <option value="portrait_4_3">竖版 4:3</option>
-                <option value="landscape_4_3">横版 4:3</option>
-              </select>
-            </label>
-          </>
+          </div>
         ) : null}
         {modality === "image_to_video" ? (
-          <>
-            <label className="field">
-              <span>参考图片</span>
+          <div className="studio-input-row studio-input-row--video">
+            <label className="studio-upload-tile studio-upload-tile--input">
               <input
                 accept="image/jpeg,image/png,image/webp"
+                aria-label="参考图片"
                 onChange={() => {
                   setInputUrl(undefined);
                   resetQuote();
@@ -335,11 +370,8 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
                 ref={inputFile}
                 type="file"
               />
-              <small>
-                {inputUrl
-                  ? "图片已安全上传，可用于本次请求。"
-                  : "支持 PNG、JPG、WebP，最大 10 MB。"}
-              </small>
+              <span>{inputUrl ? "✓" : "+"}</span>
+              <small>{inputUrl ? "已上传" : "图片"}</small>
             </label>
             <label className="field studio-prompt">
               <span>描述视频</span>
@@ -348,68 +380,119 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
                   setVideoPrompt(event.target.value);
                   resetQuote();
                 }}
+                placeholder="描述镜头中的动作与变化"
                 rows={5}
                 value={videoPrompt}
               />
             </label>
-            <fieldset className="duration-control">
-              <legend>视频时长</legend>
-              <label>
-                <input
-                  checked={videoDuration === "5"}
-                  name="duration"
-                  onChange={() => {
-                    setVideoDuration("5");
-                    resetQuote();
-                  }}
-                  type="radio"
-                />
-                5 秒
-              </label>
-              <label>
-                <input
-                  checked={videoDuration === "10"}
-                  name="duration"
-                  onChange={() => {
-                    setVideoDuration("10");
-                    resetQuote();
-                  }}
-                  type="radio"
-                />
-                10 秒
-              </label>
-            </fieldset>
-          </>
+          </div>
         ) : null}
         {modality === "text_to_speech" ? (
-          <>
-            <label className="field studio-prompt">
+          <div className="studio-input-row studio-input-row--audio">
+            <div className="studio-upload-tile" aria-hidden="true">
+              <span>+</span>
+              <small>音频</small>
+            </div>
+            <label className="field studio-prompt studio-prompt--audio">
               <span>需要朗读的文本</span>
               <textarea
                 onChange={(event) => {
                   setSpeechText(event.target.value);
                   resetQuote();
                 }}
+                placeholder="@ 文本：输入你想要朗读的内容..."
                 rows={7}
                 value={speechText}
               />
-              <small>按每 10 个字符计算 Credits。</small>
             </label>
-            <label className="field">
-              <span>声音标识（可选）</span>
-              <input
-                onChange={(event) => {
-                  setVoiceId(event.target.value);
-                  resetQuote();
-                }}
-                placeholder="voice-id"
-                value={voiceId}
-              />
-            </label>
-          </>
+          </div>
         ) : null}
-      </div>
 
+        <div className="studio-parameter-bar">
+          <div className="studio-parameters">
+            {modality === "text_to_image" ? (
+              <label className="studio-parameter-pill">
+                <span className="sr-only">图像尺寸</span>
+                <select
+                  onChange={(event) => {
+                    setImageSize(event.target.value);
+                    resetQuote();
+                  }}
+                  value={imageSize}
+                >
+                  <option value="square">方形</option>
+                  <option value="square_hd">高清方形</option>
+                  <option value="portrait_4_3">竖版 4:3</option>
+                  <option value="landscape_4_3">横版 4:3</option>
+                </select>
+              </label>
+            ) : null}
+            {modality === "image_to_video" ? (
+              <>
+                <span className="studio-parameter-pill">Kling 2.1</span>
+                <fieldset className="duration-control studio-parameter-pill">
+                  <legend className="sr-only">视频时长</legend>
+                  <label>
+                    <input
+                      checked={videoDuration === "5"}
+                      name="duration"
+                      onChange={() => {
+                        setVideoDuration("5");
+                        resetQuote();
+                      }}
+                      type="radio"
+                    />
+                    5 秒
+                  </label>
+                  <label>
+                    <input
+                      checked={videoDuration === "10"}
+                      name="duration"
+                      onChange={() => {
+                        setVideoDuration("10");
+                        resetQuote();
+                      }}
+                      type="radio"
+                    />
+                    10 秒
+                  </label>
+                </fieldset>
+              </>
+            ) : null}
+            {modality === "text_to_speech" ? (
+              <label className="studio-parameter-pill studio-voice-pill">
+                <span className="sr-only">声音标识（可选）</span>
+                <input
+                  onChange={(event) => {
+                    setVoiceId(event.target.value);
+                    resetQuote();
+                  }}
+                  placeholder="文字转语音"
+                  value={voiceId}
+                />
+              </label>
+            ) : null}
+          </div>
+          <div className="studio-submit">
+            <div
+              className="studio-credit-display"
+              aria-label={`预计消耗 ${previewCredits} Credits`}
+            >
+              <span aria-hidden="true">◆</span>
+              <strong>{previewCredits}</strong>
+            </div>
+            <button
+              aria-label="生成"
+              className="studio-generate-button"
+              disabled={pending || state === "queued"}
+              onClick={() => void submit()}
+              type="button"
+            >
+              ↑
+            </button>
+          </div>
+        </div>
+      </div>
       <aside
         className="studio-result"
         aria-live="polite"
@@ -417,7 +500,7 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
       >
         <p className="eyebrow">生成状态</p>
         <h2>{state === "queued" ? "任务已提交" : "准备开始创作"}</h2>
-        <p>{message ?? "获取报价后，系统才会允许创建任务并预留 Credits。"}</p>
+        <p>{message ?? "输入完成后即可开始生成。"}</p>
         {state === "insufficient" ? (
           <button
             className="button button--secondary"
@@ -428,38 +511,6 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
           </button>
         ) : null}
       </aside>
-
-      <div className="studio-submit">
-        <p>
-          {quote ? `确定报价：${quote.creditsCost} Credits` : "尚未获取报价"}
-        </p>
-        <div>
-          <button
-            className="button button--secondary"
-            disabled={pending}
-            onClick={() => void requestQuote()}
-            type="button"
-          >
-            {pending
-              ? "正在处理..."
-              : authenticated
-                ? "获取报价"
-                : "登录后获取报价"}
-          </button>
-          <button
-            className="button button--primary"
-            disabled={pending || !quote || state === "queued"}
-            onClick={() => void submit()}
-            type="button"
-          >
-            {state === "submitting"
-              ? "正在提交..."
-              : quote
-                ? `生成 · ${quote.creditsCost}`
-                : "生成"}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
