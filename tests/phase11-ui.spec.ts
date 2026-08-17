@@ -62,7 +62,12 @@ test("studio tabs support keyboard navigation", async ({ page }) => {
 test("reduced motion keeps the static media treatment", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(page.locator(".capability-card__media").first()).toBeVisible();
+  await expect(
+    page.locator(".home-inspiration__item video").first(),
+  ).toBeVisible();
+  await expect(
+    page.locator(".home-inspiration__item video").first(),
+  ).toHaveJSProperty("muted", true);
   await page.goto("/ai-image-generator");
   await expect
     .poll(() =>

@@ -78,17 +78,17 @@
 
 ## E2E 与 UI
 
-| ID    | 检查                                                       | 状态         | 证据                                       |
-| ----- | ---------------------------------------------------------- | ------------ | ------------------------------------------ |
-| E-001 | Email Register/Login/Logout/Refresh 与 Session Persistence | PASS         | 真实测试邮箱、本地 Production Server       |
-| E-002 | Google Consent/Callback/Provider Identity                  | PASS         | Google Test User、本地 Production Server   |
-| E-003 | Google Cancel、Invalid State、Callback Error、同邮箱策略   | NOT EXECUTED | 未有独立真实边界执行记录                   |
-| E-004 | 公开路由、Studio、Pricing、Landing、Support/Legal 可达     | PASS         | Production HTTP Smoke                      |
-| E-005 | 未登录 Account Guard、Generate Guard 与安全错误            | PASS         | `/account` 返回 307；Generate 未认证被拒绝 |
-| E-006 | Studio 三 Tab、表单焦点、窄屏导航和 Auth CTA 键盘流程      | PASS         | Playwright 与人工键盘 Smoke                |
-| E-007 | Desktop/Mobile 响应式截图、媒体和 reduced motion           | PASS         | Playwright：16 个 Chromium 场景            |
-| E-008 | axe 检查、语义结构和 Skip Link                             | PASS         | Playwright axe 与页面检查                  |
-| E-009 | Provider Rate Limit、Timeout、Moderation、Failure 安全错误 | NOT EXECUTED | 未进行额外真实 Provider 异常调用           |
+| ID    | 检查                                                       | 状态         | 证据                                                                       |
+| ----- | ---------------------------------------------------------- | ------------ | -------------------------------------------------------------------------- |
+| E-001 | Email Register/Login/Logout/Refresh 与 Session Persistence | PASS         | 真实测试邮箱、本地 Production Server                                       |
+| E-002 | Google Consent/Callback/Provider Identity                  | PASS         | Google Test User、本地 Production Server                                   |
+| E-003 | Google Cancel、Invalid State、Callback Error、同邮箱策略   | NOT EXECUTED | 未有独立真实边界执行记录                                                   |
+| E-004 | 公开路由、Studio、Pricing、Landing、Support/Legal 可达     | PASS         | Production HTTP Smoke                                                      |
+| E-005 | 未登录 Account Guard、Generate Guard 与安全错误            | PASS         | `/account` 返回 307；Generate 未认证被拒绝                                 |
+| E-006 | Studio 三 Tab、表单焦点、窄屏导航和 Auth CTA 键盘流程      | PASS         | Playwright 与人工键盘 Smoke                                                |
+| E-007 | Desktop/Mobile 响应式截图、媒体和 reduced motion           | PASS         | Playwright：15 个 Chromium 场景通过；1 个受控 Account 场景因未提供凭据跳过 |
+| E-008 | axe 检查、语义结构和 Skip Link                             | PASS         | Playwright axe 与页面检查                                                  |
+| E-009 | Provider Rate Limit、Timeout、Moderation、Failure 安全错误 | NOT EXECUTED | 未进行额外真实 Provider 异常调用                                           |
 
 ## Real Integration
 
@@ -122,7 +122,7 @@
 | Q-002 | Robots、Sitemap、Noindex、404、Redirect、Internal Link                  | PASS         | Sitemap 公开 URL、私有边界与 `/create` Redirect      |
 | Q-003 | Organization/WebSite JSON-LD 与可见内容一致                             | PASS         | Server HTML Contract                                 |
 | Q-004 | `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build` | PASS         | 本地质量门禁；Production Build 成功                  |
-| Q-005 | Chromium E2E                                                            | PASS         | 16 个场景通过                                        |
+| Q-005 | Chromium E2E                                                            | PASS         | 15 个场景通过；1 个受控 Account 场景因未提供凭据跳过 |
 | Q-006 | Hosted CI Workflow 实际触发                                             | PASS         | GitHub Actions `Quality Gate #2` 在 `92b8885` 上通过 |
 | Q-007 | 完整 Secret 与 License Scanner                                          | NOT EXECUTED | 生产依赖 advisory 检查通过，完整扫描未配置/执行      |
 | Q-008 | Real 与 Stub/Fixture 证据分离                                           | PASS         | 生产路径无 Mock 结果；隔离 fixture 单独记录          |

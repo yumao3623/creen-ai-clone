@@ -3,6 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  BottomToolbar,
+  PrimaryTabs,
+  PromptEditor,
+  UploadCard,
+  WorkbenchShell,
+} from "./workbench-parts";
+import styles from "./generate-control.module.css";
+
 type Modality = "text_to_image" | "image_to_video" | "text_to_speech";
 
 type Quote = Readonly<{
@@ -30,12 +39,28 @@ type InspirationEvent = Readonly<{
 }>;
 
 const modes = [
-  ["text_to_image", "图片", "文本生成图片", "▣"],
-  ["image_to_video", "视频", "图片生成视频", "▰"],
-  ["text_to_speech", "音讯", "文本生成语音", "◒"],
+  {
+    value: "text_to_image",
+    label: "图片",
+    description: "文本生成图片",
+    icon: "▣",
+  },
+  {
+    value: "image_to_video",
+    label: "视频",
+    description: "图片生成视频",
+    icon: "▰",
+  },
+  {
+    value: "text_to_speech",
+    label: "音讯",
+    description: "文本生成语音",
+    icon: "◒",
+  },
 ] as const;
 
 const defaultImagePrompt = "";
+const defaultVideoPrompt = "";
 
 function messageFor(error: unknown) {
   return error instanceof Error
@@ -50,7 +75,7 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
   const [modality, setModality] = useState<Modality>("text_to_image");
   const [imagePrompt, setImagePrompt] = useState(defaultImagePrompt);
   const [imageSize, setImageSize] = useState("square");
-  const [videoPrompt, setVideoPrompt] = useState("镜头缓慢穿过画面中的场景");
+  const [videoPrompt, setVideoPrompt] = useState(defaultVideoPrompt);
   const [videoDuration, setVideoDuration] = useState("5");
   const [inputUrl, setInputUrl] = useState<string>();
   const [speechText, setSpeechText] = useState("");
@@ -120,7 +145,7 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
     }
 
     event.preventDefault();
-    const nextMode = modes[nextIndex]![0];
+    const nextMode = modes[nextIndex]!.value;
     chooseMode(nextMode);
     tabRefs.current[nextIndex]?.focus();
   }
@@ -282,84 +307,40 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
         : Math.max(1, Math.ceil(Array.from(speechText).length / 10)) * 6;
 
   return (
-    <div className="studio-workbench" data-modality={modality}>
-      <div className="studio-workbench__topline">
-        <div className="studio-mode-tabs" role="tablist" aria-label="创作模式">
-          {modes.map(([value, label, description, icon], index) => (
-            <button
-              aria-controls={`${value}-panel`}
-              aria-selected={modality === value}
-              className={modality === value ? "is-active" : undefined}
-              key={value}
-              onClick={() => chooseMode(value)}
-              onKeyDown={(event) => handleTabKeyDown(event, index)}
-              ref={(element) => {
-                tabRefs.current[index] = element;
-              }}
-              role="tab"
-              id={`${value}-tab`}
-              tabIndex={modality === value ? 0 : -1}
-              type="button"
-            >
-              <span className="studio-mode-tabs__icon" aria-hidden="true">
-                {icon}
-              </span>
-              <span>{label}</span>
-              <small>{description}</small>
-            </button>
-          ))}
-          <span className="studio-mode-tabs__disabled" aria-hidden="true">
-            <span className="studio-mode-tabs__icon">⌁</span>
-            <span>视频编辑</span>
-          </span>
-        </div>
-        <button className="studio-discover" type="button">
-          <span aria-hidden="true">✦</span> 探索
-        </button>
-      </div>
-
-      {modality === "image_to_video" ? (
-        <div className="studio-secondary-tabs" aria-label="视频工具">
-          <span className="is-active">生成</span>
-          <span>动作控制</span>
-          <span>
-            唇型同步 <b>NEW</b>
-          </span>
-          <span>
-            数位人 <b>NEW</b>
-          </span>
-        </div>
-      ) : null}
-
+    <WorkbenchShell activeMode={modality}>
+      <PrimaryTabs
+        activeMode={modality}
+        modes={modes}
+        onKeyDown={handleTabKeyDown}
+        onSelect={chooseMode}
+        tabRefs={tabRefs}
+      />
       <div
         aria-labelledby={`${modality}-tab`}
-        className="studio-composer"
+        className={styles.composer}
         id={`${modality}-panel`}
         role="tabpanel"
       >
         {modality === "text_to_image" ? (
-          <div className="studio-input-row">
-            <div className="studio-upload-tile" aria-hidden="true">
-              <span>+</span>
-              <small>图片</small>
-            </div>
-            <label className="field studio-prompt">
-              <span>描述图片</span>
-              <textarea
-                onChange={(event) => {
-                  setImagePrompt(event.target.value);
-                  resetQuote();
-                }}
-                placeholder="描述您想创作的内容"
-                rows={7}
-                value={imagePrompt}
-              />
-            </label>
+          <div className={styles.inputRow}>
+            <UploadCard label="图片" />
+            <PromptEditor
+              ariaLabel="描述图片"
+              onChange={(value) => {
+                setImagePrompt(value);
+                resetQuote();
+              }}
+              placeholder="描述您想创作的内容"
+              rows={7}
+              value={imagePrompt}
+            />
           </div>
         ) : null}
         {modality === "image_to_video" ? (
-          <div className="studio-input-row studio-input-row--video">
-            <label className="studio-upload-tile studio-upload-tile--input">
+          <div className={styles.inputRow}>
+            <label
+              className={`${styles.uploadCard} ${styles.uploadInput} ${inputUrl ? styles.uploadInputUploaded : ""}`}
+            >
               <input
                 accept="image/jpeg,image/png,image/webp"
                 aria-label="参考图片"
@@ -370,135 +351,115 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
                 ref={inputFile}
                 type="file"
               />
-              <span>{inputUrl ? "✓" : "+"}</span>
-              <small>{inputUrl ? "已上传" : "图片"}</small>
+              <span className={styles.uploadCardIcon} aria-hidden="true">
+                +
+              </span>
+              <span className={styles.uploadCardLabel}>
+                {inputUrl ? "已上传" : "图片"}
+              </span>
             </label>
-            <label className="field studio-prompt">
-              <span>描述视频</span>
-              <textarea
-                onChange={(event) => {
-                  setVideoPrompt(event.target.value);
-                  resetQuote();
-                }}
-                placeholder="描述镜头中的动作与变化"
-                rows={5}
-                value={videoPrompt}
-              />
-            </label>
+            <PromptEditor
+              ariaLabel="描述视频"
+              onChange={(value) => {
+                setVideoPrompt(value);
+                resetQuote();
+              }}
+              placeholder="描述镜头中的动作与变化"
+              rows={5}
+              value={videoPrompt}
+            />
           </div>
         ) : null}
         {modality === "text_to_speech" ? (
-          <div className="studio-input-row studio-input-row--audio">
-            <div className="studio-upload-tile" aria-hidden="true">
-              <span>+</span>
-              <small>音频</small>
-            </div>
-            <label className="field studio-prompt studio-prompt--audio">
-              <span>需要朗读的文本</span>
-              <textarea
-                onChange={(event) => {
-                  setSpeechText(event.target.value);
-                  resetQuote();
-                }}
-                placeholder="@ 文本：输入你想要朗读的内容..."
-                rows={7}
-                value={speechText}
-              />
-            </label>
+          <div className={styles.inputRow}>
+            <UploadCard label="音频" />
+            <PromptEditor
+              ariaLabel="需要朗读的文本"
+              onChange={(value) => {
+                setSpeechText(value);
+                resetQuote();
+              }}
+              placeholder="输入你想要朗读的内容..."
+              rows={7}
+              value={speechText}
+            />
           </div>
         ) : null}
 
-        <div className="studio-parameter-bar">
-          <div className="studio-parameters">
-            {modality === "text_to_image" ? (
-              <label className="studio-parameter-pill">
-                <span className="sr-only">图像尺寸</span>
-                <select
-                  onChange={(event) => {
-                    setImageSize(event.target.value);
-                    resetQuote();
-                  }}
-                  value={imageSize}
-                >
-                  <option value="square">方形</option>
-                  <option value="square_hd">高清方形</option>
-                  <option value="portrait_4_3">竖版 4:3</option>
-                  <option value="landscape_4_3">横版 4:3</option>
-                </select>
-              </label>
-            ) : null}
-            {modality === "image_to_video" ? (
-              <>
-                <span className="studio-parameter-pill">Kling 2.1</span>
-                <fieldset className="duration-control studio-parameter-pill">
-                  <legend className="sr-only">视频时长</legend>
-                  <label>
-                    <input
-                      checked={videoDuration === "5"}
-                      name="duration"
-                      onChange={() => {
-                        setVideoDuration("5");
-                        resetQuote();
-                      }}
-                      type="radio"
-                    />
-                    5 秒
-                  </label>
-                  <label>
-                    <input
-                      checked={videoDuration === "10"}
-                      name="duration"
-                      onChange={() => {
-                        setVideoDuration("10");
-                        resetQuote();
-                      }}
-                      type="radio"
-                    />
-                    10 秒
-                  </label>
-                </fieldset>
-              </>
-            ) : null}
-            {modality === "text_to_speech" ? (
-              <label className="studio-parameter-pill studio-voice-pill">
-                <span className="sr-only">声音标识（可选）</span>
-                <input
-                  onChange={(event) => {
-                    setVoiceId(event.target.value);
-                    resetQuote();
-                  }}
-                  placeholder="文字转语音"
-                  value={voiceId}
-                />
-              </label>
-            ) : null}
-          </div>
-          <div className="studio-submit">
-            <div
-              className="studio-credit-display"
-              aria-label={`预计消耗 ${previewCredits} Credits`}
-            >
-              <span aria-hidden="true">◆</span>
-              <strong>{previewCredits}</strong>
-            </div>
-            <button
-              aria-label="生成"
-              className="studio-generate-button"
-              disabled={pending || state === "queued"}
-              onClick={() => void submit()}
-              type="button"
-            >
-              ↑
-            </button>
-          </div>
-        </div>
+        <BottomToolbar
+          credits={previewCredits}
+          disabled={pending || state === "queued"}
+          onGenerate={() => void submit()}
+        >
+          {modality === "text_to_image" ? (
+            <label className={styles.parameterPill}>
+              <span className="sr-only">图像尺寸</span>
+              <select
+                onChange={(event) => {
+                  setImageSize(event.target.value);
+                  resetQuote();
+                }}
+                value={imageSize}
+              >
+                <option value="square">方形</option>
+                <option value="square_hd">高清方形</option>
+                <option value="portrait_4_3">竖版 4:3</option>
+                <option value="landscape_4_3">横版 4:3</option>
+              </select>
+            </label>
+          ) : null}
+          {modality === "image_to_video" ? (
+            <>
+              <span className={styles.parameterPill}>Kling 2.1</span>
+              <fieldset className={styles.durationControl}>
+                <legend className="sr-only">视频时长</legend>
+                <label>
+                  <input
+                    checked={videoDuration === "5"}
+                    name="duration"
+                    onChange={() => {
+                      setVideoDuration("5");
+                      resetQuote();
+                    }}
+                    type="radio"
+                  />
+                  5 秒
+                </label>
+                <label>
+                  <input
+                    checked={videoDuration === "10"}
+                    name="duration"
+                    onChange={() => {
+                      setVideoDuration("10");
+                      resetQuote();
+                    }}
+                    type="radio"
+                  />
+                  10 秒
+                </label>
+              </fieldset>
+            </>
+          ) : null}
+          {modality === "text_to_speech" ? (
+            <label className={`${styles.parameterPill} ${styles.voiceInput}`}>
+              <span className="sr-only">声音标识（可选）</span>
+              <input
+                onChange={(event) => {
+                  setVoiceId(event.target.value);
+                  resetQuote();
+                }}
+                placeholder="文字转语音"
+                value={voiceId}
+              />
+            </label>
+          ) : null}
+        </BottomToolbar>
       </div>
       <aside
-        className="studio-result"
+        className={`${styles.result}${message ? ` ${styles.resultVisible}` : ""}`}
         aria-live="polite"
-        data-visible={message ? "true" : "false"}
       >
-        <p className="eyebrow">生成状态</p>
+        <p className={styles.resultEyebrow}>生成状态</p>
         <h2>{state === "queued" ? "任务已提交" : "准备开始创作"}</h2>
         <p>{message ?? "输入完成后即可开始生成。"}</p>
         {state === "insufficient" ? (
@@ -511,6 +472,6 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
           </button>
         ) : null}
       </aside>
-    </div>
+    </WorkbenchShell>
   );
 }

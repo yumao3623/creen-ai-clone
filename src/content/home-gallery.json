@@ -134,6 +134,16 @@
       "duration": "5"
     },
     {
+      "id": "existing-fashion-portrait-motion",
+      "src": "/media/home-video-fashion-portrait.mp4",
+      "poster": "/media/phase11-gallery-fashion.jpg",
+      "alt": "蓝色背景中的时尚人物轻微转向镜头",
+      "prompt": "时尚人物在蓝色摄影棚中自然呼吸并轻微转向镜头，虹彩外套捕捉到细腻的光线变化，稳定的编辑肖像构图，无文字、无标志。",
+      "credits": 2800,
+      "duration": "5",
+      "sourceImage": "existing-fashion"
+    },
+    {
       "id": "new-neon-rain-motion",
       "src": "/media/home-video-neon-rain.mp4",
       "poster": "/media/home-video-neon-rain.jpg",

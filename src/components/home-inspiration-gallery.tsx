@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 import homeGallery from "@/content/home-gallery.json";
 
@@ -31,6 +32,11 @@ const inspirations: ReadonlyArray<Inspiration> = [
 ];
 
 export function HomeInspirationGallery() {
+  const [activeKind, setActiveKind] = useState<Inspiration["kind"]>("video");
+  const visibleInspirations = inspirations.filter(
+    (item) => item.kind === activeKind,
+  );
+
   function applyInspiration(item: Inspiration) {
     window.dispatchEvent(
       new CustomEvent("creen:apply-inspiration", {
@@ -44,48 +50,61 @@ export function HomeInspirationGallery() {
   }
 
   return (
-    <>
-      <section className="home-inspiration" aria-labelledby="inspiration-title">
-        <div className="section-heading home-inspiration__heading">
-          <p className="eyebrow">探索灵感</p>
-          <h2 id="inspiration-title">从一个画面开始</h2>
-          <p>图片与视频灵感，直接带回创作台继续调整。</p>
-        </div>
-        <div className="home-inspiration__grid">
-          {inspirations.map((item) => (
-            <article
-              className={`home-inspiration__item home-inspiration__item--${item.kind}`}
-              key={item.id}
-            >
-              {item.kind === "video" ? (
-                <video
-                  aria-label={item.alt}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  poster={item.poster}
-                  preload="metadata"
-                  src={item.src}
-                />
-              ) : (
-                <Image
-                  alt={item.alt}
-                  fill
-                  sizes="(max-width: 48rem) 50vw, 25vw"
-                  src={item.src}
-                />
-              )}
-              <div className="home-inspiration__overlay">
-                <span>{item.kind === "video" ? "视频灵感" : "图片灵感"}</span>
-                <button onClick={() => applyInspiration(item)} type="button">
-                  制作相似内容
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    </>
+    <section className="home-inspiration" aria-label="创作灵感">
+      <div className="home-inspiration__filters" aria-label="灵感分类">
+        <button
+          aria-pressed={activeKind === "video"}
+          className={activeKind === "video" ? "is-active" : undefined}
+          onClick={() => setActiveKind("video")}
+          type="button"
+        >
+          <span aria-hidden="true">▰</span>
+          影片
+        </button>
+        <button
+          aria-pressed={activeKind === "image"}
+          className={activeKind === "image" ? "is-active" : undefined}
+          onClick={() => setActiveKind("image")}
+          type="button"
+        >
+          <span aria-hidden="true">▣</span>
+          图片
+        </button>
+      </div>
+      <div className="home-inspiration__grid" data-kind={activeKind}>
+        {visibleInspirations.map((item) => (
+          <article
+            className={`home-inspiration__item home-inspiration__item--${item.kind}`}
+            key={item.id}
+          >
+            {item.kind === "video" ? (
+              <video
+                aria-label={item.alt}
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster={item.poster}
+                preload="metadata"
+                src={item.src}
+              />
+            ) : (
+              <Image
+                alt={item.alt}
+                fill
+                sizes="(max-width: 48rem) 50vw, 25vw"
+                src={item.src}
+              />
+            )}
+            <div className="home-inspiration__overlay">
+              <span>{item.kind === "video" ? "视频灵感" : "图片灵感"}</span>
+              <button onClick={() => applyInspiration(item)} type="button">
+                制作相似内容
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }

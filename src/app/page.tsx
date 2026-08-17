@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
 import { GenerateControl } from "@/features/studio/generate-control";
@@ -17,25 +16,19 @@ export const metadata: Metadata = publicPageMetadata({
 
 const capabilities = [
   {
-    eyebrow: "图片",
+    icon: "▧",
     title: "文本生成图片",
     description: "通过文字提示生成图片，在提交前确认可信 Credits 报价。",
-    accent: "violet",
-    image: "/media/phase11-gallery-sunrise-landscape.jpg",
   },
   {
-    eyebrow: "视频",
+    icon: "▰",
     title: "图片生成视频",
     description: "上传图片作为参考，独立生成短视频。",
-    accent: "blue",
-    image: "/media/phase11-gallery-animal.jpg",
   },
   {
-    eyebrow: "语音",
+    icon: "◌",
     title: "文本生成语音",
     description: "将文本转换为语音，并与另外两种模态共用 Credits 与历史记录。",
-    accent: "coral",
-    image: "/media/phase11-gallery-fashion.jpg",
   },
 ] as const;
 
@@ -51,12 +44,6 @@ const workflowSteps = [
     "确认 Quote 后提交",
     "登录后获得服务端报价；余额充足时才会把真实任务提交到服务提供方。",
   ],
-] as const;
-
-const productFacts = [
-  ["3", "已接入创作模态"],
-  ["15 分钟", "版本化 Quote 有效期"],
-  ["1", "统一 Credits 账本"],
 ] as const;
 
 const modelGroups = [
@@ -136,43 +123,25 @@ export default async function HomePage() {
         className="home-introduction"
         aria-labelledby="capabilities-title"
       >
-        <div className="section-heading">
-          <p className="eyebrow">多模态工作区</p>
+        <div className="section-heading home-introduction__heading">
           <h2 id="capabilities-title">什么是 Creen？</h2>
           <p>
             一个统一的创作工作区，将图片、视频与语音放在同一账户中，并保留报价、
             任务与 Credits 状态。
           </p>
+          <p className="home-introduction__emphasis">
+            提交前确认服务端 Quote，生成后的状态在账户中核对。
+          </p>
         </div>
 
         <div className="capability-grid capability-grid--media">
           {capabilities.map((capability) => (
-            <article
-              className={`capability-card capability-card--${capability.accent}`}
-              key={capability.title}
-            >
-              <span>{capability.eyebrow}</span>
-              <Image
-                alt=""
-                aria-hidden="true"
-                className="capability-card__media"
-                fill
-                loading="eager"
-                sizes="(max-width: 48rem) calc(100vw - 2rem), 33vw"
-                src={capability.image}
-              />
+            <article className="capability-card" key={capability.title}>
+              <span aria-hidden="true" className="capability-card__icon">
+                {capability.icon}
+              </span>
               <h3>{capability.title}</h3>
               <p>{capability.description}</p>
-              {capability.accent === "coral" ? (
-                <audio
-                  aria-label="试听 Creen 语音样本"
-                  className="capability-card__audio"
-                  controls
-                  preload="metadata"
-                >
-                  <source src="/media/phase11-studio.mp3" type="audio/mpeg" />
-                </audio>
-              ) : null}
             </article>
           ))}
         </div>
@@ -193,15 +162,6 @@ export default async function HomePage() {
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="home-facts" aria-label="产品能力概览">
-        {productFacts.map(([value, label]) => (
-          <div key={label}>
-            <strong>{value}</strong>
-            <span>{label}</span>
-          </div>
-        ))}
       </section>
 
       <section className="home-use-cases" aria-labelledby="use-cases-title">
