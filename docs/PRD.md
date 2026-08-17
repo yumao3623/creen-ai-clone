@@ -4,7 +4,7 @@
 
 Creen 是一个统一 AI 创作工作区。用户可在同一账户中创建图片、短视频和语音，使用统一 Credits 计费，并在账户页查看生成历史、余额和支付状态。
 
-项目交付覆盖以下原始目标：复刻 Creen.ai 的主要页面与 SEO 逻辑，提供完整的邮箱密码与 Google 登录，支持真实跨模态生成和计费，支持 Stripe 支付，并保留可追溯的过程记录。
+产品包含 Creen.ai 的主要页面与 SEO 逻辑、邮箱密码与 Google 登录、真实跨模态生成与计费，以及 Stripe 支付；开发与验证过程保留可追溯记录。
 
 ## 产品目标
 
@@ -48,7 +48,7 @@ Creen 是一个统一 AI 创作工作区。用户可在同一账户中创建图�
 | Result Workspace  | `/studio/result?task=<taskId>`                                                                       | 需要当前任务所属会话                   | 查看当前结果和自己的创作历史          | 查看结果、打开原始结果、复用 Prompt   |
 | Create Redirect   | `/create`                                                                                            | 公开                                   | 兼容创作入口                          | 重定向至 `/studio`                    |
 | Features          | `/features`                                                                                          | 公开                                   | 展示三条创作路径                      | 进入 Studio                           |
-| Models            | `/models`                                                                                            | 公开                                   | 展示当前已验收模型和模态              | 查看模型用途                          |
+| Models            | `/models`                                                                                            | 公开                                   | 展示当前可用模型和模态                | 查看模型用途                          |
 | Pricing           | `/pricing`                                                                                           | 公开                                   | 展示模态 Credits 基准                 | 进入 Account                          |
 | Marketing Landing | `/ai-image-generator`、`/ai-video-generator`、`/text-to-image`、`/image-to-video`、`/text-to-speech` | 公开                                   | 搜索意图内容、示例和 FAQ              | 进入 Studio、浏览相关页面             |
 | Support/Legal     | `/faq`、`/about`、`/contact`、`/privacy`、`/terms`、`/refund`                                        | 公开                                   | 帮助、公司说明和法律信息              | 阅读内容、使用内链                    |
@@ -64,7 +64,7 @@ Creen 是一个统一 AI 创作工作区。用户可在同一账户中创建图�
 
 Studio 提供三个独立模式：
 
-- `Text-to-Image`：输入图片描述，选择已验收图片模型和图像尺寸；可选真实参考图时使用兼容的 Image-to-Image 模型；
+- `Text-to-Image`：输入图片描述，选择可用图片模型和图像尺寸；可选真实参考图时使用兼容的 Image-to-Image 模型；
 - `Image-to-Video`：上传参考图片，输入视频描述并选择 5 秒或 10 秒时长；
 - `Text-to-Speech`：输入朗读文本，可选声音标识。
 
@@ -85,7 +85,7 @@ Quote 期间显示确定的 Credits 成本和有效期。点击 Generate 后，S
 
 ### Generation 与 Credits
 
-- 三种模态通过 fal.ai 执行真实生成，不使用生产 Mock 结果；每种模态按 Model Registry 选择已验收模型，Quote、Task、Provider payload 和 Result 使用同一 `modelKey`；
+- 三种模态通过 fal.ai 执行真实生成，不使用生产 Mock 结果；每种模态按 Model Registry 选择可用模型，Quote、Task、Provider payload 和 Result 使用同一 `modelKey`；
 - 用户先获取与输入参数绑定、有效期 15 分钟的 Credits Quote；
 - 提交时系统检查余额、创建任务并预留 Credits；
 - Provider 成功时结算，失败时补偿；

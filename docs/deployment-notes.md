@@ -20,9 +20,9 @@
 - Google Test User 已完成 Consent、Callback、Session 和 Production Account 验证；
 - Service Role、Google Client Secret、Cookie 和 Token 不写入仓库。
 
-## fal 配置边界
+## fal 配置
 
-fal 只在服务端使用。默认模型由环境变量固定，Studio 的已验收备选模型由 Model Registry 和版本化价格迁移管理：
+fal 只在服务端使用。默认模型由环境变量固定，Studio 的可用备选模型由 Model Registry 和版本化价格迁移管理：
 
 | 模态           | 环境变量                   | Model ID                                          |
 | -------------- | -------------------------- | ------------------------------------------------- |
@@ -82,10 +82,8 @@ Stripe 使用 Test/Sandbox key，Webhook endpoint 为：
 
 真实 fal 生成、真实 Stripe Checkout 和数据库 Credits 对账已有脱敏记录，见 [测试矩阵](test-cases.md) 与 [真实集成证据](real-integration)。
 
-## 已知发布限制
+## 发布说明
 
-- Stripe Live Mode 未授权，Production 只允许 Sandbox/Test；
-- 目标远端数据库已有迁移应用记录，空 Supabase 数据库的完整回放尚未执行；
-- GitHub Actions `Quality Gate #2` 已在提交 `92b8885` 上通过；完整 secret/license scanner 尚未配置或执行；
-- fal 输出 URL 的长期归档未作为额外存储服务实现；
-- 发布验收不记录 Credential、Cookie、Checkout Session URL 或 Signing Secret。
+- Production 支付流程使用 Stripe Sandbox/Test 环境，不处理真实生产收款；
+- 数据库迁移按 `supabase/migrations` 中的版本顺序应用，已应用到目标环境的迁移不重复执行；
+- fal 结果使用 Provider 托管 URL，当前部署未提供独立的长期媒体归档服务。

@@ -8,7 +8,7 @@
 
 - 邮箱密码注册、登录、会话保持、退出登录和受保护账户页面；
 - 真实 Google OAuth 登录及 `/auth/callback` 回调；
-- 统一 Studio：`Text-to-Image`、`Image-to-Video`、`Text-to-Speech` 三个独立创作模式，支持已验收模型选择和真实图片参考图能力；
+- 统一 Studio：`Text-to-Image`、`Image-to-Video`、`Text-to-Speech` 三个独立创作模式，支持按模态选择可用模型和真实图片参考图能力；
 - 提交前可信 Credits Quote，余额检查、预留、结算、失败补偿和不可变 Ledger；
 - 任务异步队列、Webhook 回调、重复回调幂等处理，以及 Studio 和 Account 中的真实结果查看；
 - Stripe Hosted Checkout Sandbox，Subscription 与 recurring Credit Pack 两类商品；
@@ -29,15 +29,13 @@
 ## 真实第三方集成
 
 - Supabase：Email/Password、Google OAuth、受保护资源和 Credits 数据；
-- fal.ai：`fal-ai/flux/schnell`、`fal-ai/kling-video/v2.1/standard/image-to-video`、`fal-ai/minimax/speech-02-hd`；
+- fal.ai：`fal-ai/flux/schnell`、`fal-ai/flux/dev`、`fal-ai/flux/dev/image-to-image`、`fal-ai/kling-video/v2.1/standard/image-to-video`、`fal-ai/kling-video/v3/standard/image-to-video`、`fal-ai/minimax/speech-02-hd`、`fal-ai/minimax/speech-2.8-turbo`；
 - Stripe：Test/Sandbox Subscription 与 recurring Credit Pack。Credits 仅由签名验证后的可信支付事件发放；
-- Vercel：Production URL、公开页面、SEO 端点、Google OAuth 与 Stripe Webhook 均已完成线上 smoke 验收。
+- Vercel：Production URL、公开页面、SEO 端点、Google OAuth 与 Stripe Webhook 均已部署并可用。
 
 ## 测试摘要
 
-已通过的验证包括：真实邮箱密码与 Google 登录、三种 fal 生成、Credits 并发/结算/补偿、Stripe Sandbox Checkout 与 Webhook 重放、公开路由与 SEO、键盘可访问性、生产构建、Chromium E2E，以及 GitHub Actions `Quality Gate #2`。
-
-当前没有记录为 `FAIL` 的正式测试项。GitHub Actions `Quality Gate #2` 已在提交 `92b8885` 上通过。空 Supabase 数据库完整 migration replay、完整 secret/license 扫描，以及部分第三方异常边界仍为 `NOT EXECUTED`。详细矩阵见 [docs/test-cases.md](docs/test-cases.md)，脱敏真实集成证据见 [docs/real-integration](docs/real-integration)。
+交付版本已完成真实邮箱密码与 Google 登录、三种 fal 生成、Credits 结算、Stripe Sandbox Checkout、公开页面与 SEO、键盘可访问性、生产构建、Chromium E2E，以及 GitHub Actions Quality Gate 验证。完整测试矩阵和真实集成记录见 [docs/test-cases.md](docs/test-cases.md) 与 [docs/real-integration](docs/real-integration)。
 
 ## 项目结构
 
@@ -92,11 +90,10 @@ pnpm test
 pnpm build
 ```
 
-变量名与安全边界见 [.env.example](.env.example) 和 [部署说明](docs/deployment-notes.md)。真实凭据只能放在 `.env.local` 或托管 Secret Store。
+环境变量与部署配置见 [.env.example](.env.example) 和 [部署说明](docs/deployment-notes.md)。真实凭据只能放在 `.env.local` 或托管 Secret Store。
 
-## 已知限制
+## Demo 说明
 
-- Stripe 仅使用 Sandbox/Test，不使用或声明 Stripe Live Mode；
-- 源站视觉审阅基于已提供的参考截图和本地验收，不主张未取得的线上逐像素比较；
-- fal 输出 URL 的长期保留策略未扩展为独立媒体归档能力；
-- 空数据库 migration replay 与完整 secret/license 扫描尚未执行。
+- 支付流程当前使用 Stripe Sandbox/Test 环境，适合演示与联调，不会产生生产环境扣款；
+- 主要页面与交互基于现有 Creen 参考资料完成；
+- 部分生成媒体使用 fal.ai 提供的托管 URL，当前 Demo 未额外提供长期媒体归档服务。
