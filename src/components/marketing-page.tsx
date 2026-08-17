@@ -58,7 +58,7 @@ export function MarketingPageTemplate({ page }: { page: MarketingPage }) {
           <span>音频</span>
         </span>
         <span className="marketing-creator-preview__prompt">
-          进入 Studio，开始 {page.capability} 创作
+          进入创作工作区，开始 {capabilityLabel(page.capability)} 创作
         </span>
         <span className="marketing-creator-preview__footer">
           <span>在提交前确认 Credits Quote</span>
@@ -89,8 +89,8 @@ export function MarketingPageTemplate({ page }: { page: MarketingPage }) {
         aria-label={`${page.capability} 工作流`}
       >
         <div>
-          <p className="eyebrow">WORKFLOW</p>
-          <h2>{page.capability}</h2>
+          <p className="eyebrow">创作流程</p>
+          <h2>{capabilityLabel(page.capability)}</h2>
         </div>
         <ol>
           {page.steps.map((step, index) => (
@@ -103,7 +103,7 @@ export function MarketingPageTemplate({ page }: { page: MarketingPage }) {
       </section>
       <section className="marketing-details" aria-labelledby="faq-title">
         <div>
-          <p className="eyebrow">FAQ</p>
+          <p className="eyebrow">常见问题</p>
           <h2 id="faq-title">常见问题</h2>
         </div>
         <dl>
@@ -116,7 +116,7 @@ export function MarketingPageTemplate({ page }: { page: MarketingPage }) {
         </dl>
       </section>
       <section className="marketing-related" aria-labelledby="related-title">
-        <p className="eyebrow">EXPLORE MORE</p>
+        <p className="eyebrow">继续探索</p>
         <h2 id="related-title">相邻创作路径</h2>
         <div>
           {page.related.map((item) => (
@@ -129,4 +129,17 @@ export function MarketingPageTemplate({ page }: { page: MarketingPage }) {
       </section>
     </main>
   );
+}
+
+function capabilityLabel(capability: MarketingPage["capability"]) {
+  switch (capability) {
+    case "Text to Image":
+      return "文本生成图片";
+    case "Image to Video":
+      return "图片生成视频";
+    case "Text to Speech":
+      return "文本生成语音";
+    default:
+      return capability;
+  }
 }

@@ -35,9 +35,7 @@ export function AuthForm({ mode, nextPath, notice }: AuthFormProps) {
         </Link>
       </div>
       <div className="auth-panel__heading">
-        <p className="eyebrow">
-          {isRegistration ? "REGISTER" : "WELCOME BACK"}
-        </p>
+        <p className="eyebrow">{isRegistration ? "注册" : "欢迎回来"}</p>
         <h1>{isRegistration ? "创建账户" : "登录"}</h1>
         <p>
           {isRegistration

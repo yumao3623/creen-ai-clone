@@ -21,6 +21,9 @@ export async function SiteHeader() {
 
         <nav aria-label="主导航">
           <ul className="site-nav">
+            <li>
+              <Link href="/">首页</Link>
+            </li>
             {siteConfig.navigation.map((item) => (
               <li key={item.href}>
                 <Link href={item.href}>{item.label}</Link>
@@ -32,6 +35,7 @@ export async function SiteHeader() {
         <details className="site-menu">
           <summary aria-label="打开导航">菜单</summary>
           <nav aria-label="移动导航">
+            <Link href="/">首页</Link>
             {siteConfig.navigation.map((item) => (
               <Link href={item.href} key={item.href}>
                 {item.label}

@@ -20,12 +20,12 @@ type ApiResult = Readonly<{
 }>;
 
 const modes = [
-  ["text_to_image", "Image", "Text to Image"],
-  ["image_to_video", "Video", "Image to Video"],
-  ["text_to_speech", "Audio", "Text to Speech"],
+  ["text_to_image", "图片", "文本生成图片"],
+  ["image_to_video", "视频", "图片生成视频"],
+  ["text_to_speech", "语音", "文本生成语音"],
 ] as const;
 
-const defaultImagePrompt = "A quiet futuristic studio lit by soft green light";
+const defaultImagePrompt = "柔和绿光照亮的安静未来创作工作室";
 
 function messageFor(error: unknown) {
   return error instanceof Error
@@ -40,14 +40,11 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
   const [modality, setModality] = useState<Modality>("text_to_image");
   const [imagePrompt, setImagePrompt] = useState(defaultImagePrompt);
   const [imageSize, setImageSize] = useState("square");
-  const [videoPrompt, setVideoPrompt] = useState(
-    "Slow camera movement through the scene",
-  );
+  const [videoPrompt, setVideoPrompt] = useState("镜头缓慢穿过画面中的场景");
   const [videoDuration, setVideoDuration] = useState("5");
   const [inputUrl, setInputUrl] = useState<string>();
-  const [speechText, setSpeechText] = useState(
-    "Welcome to a quieter way to create.",
-  );
+  const [speechText, setSpeechText] =
+    useState("欢迎来到更安静、更专注的创作方式。");
   const [voiceId, setVoiceId] = useState("");
   const [quote, setQuote] = useState<Quote>();
   const [clientKey, setClientKey] = useState<string>();
@@ -228,8 +225,8 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
       setState("queued");
       setMessage(
         result.status === "reconciliation_required"
-          ? "Provider 已接受请求，任务正在对账。请稍后到 History 查看可信状态。"
-          : "任务已进入队列。可以安全离开，并在 History 查看最终结果。",
+          ? "服务提供方已接受请求，任务正在对账。请稍后到任务记录查看可信状态。"
+          : "任务已进入队列。可以安全离开，并在任务记录查看最终结果。",
       );
     } catch (error) {
       setState("error");
@@ -389,7 +386,7 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
       </div>
 
       <aside className="studio-result" aria-live="polite">
-        <p className="eyebrow">RESULT</p>
+        <p className="eyebrow">生成状态</p>
         <h2>{state === "queued" ? "任务已提交" : "准备开始创作"}</h2>
         <p>{message ?? "获取报价后，系统才会允许创建任务并预留 Credits。"}</p>
         {state === "insufficient" ? (
@@ -429,8 +426,8 @@ export function GenerateControl({ authenticated }: { authenticated: boolean }) {
             {state === "submitting"
               ? "正在提交..."
               : quote
-                ? `Generate · ${quote.creditsCost}`
-                : "Generate"}
+                ? `生成 · ${quote.creditsCost}`
+                : "生成"}
           </button>
         </div>
       </div>

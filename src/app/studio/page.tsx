@@ -13,11 +13,11 @@ export default async function StudioPage() {
     <main className="studio-page" id="main-content" tabIndex={-1}>
       <section className="studio-shell" aria-labelledby="studio-title">
         <div className="studio-shell__heading">
-          <p className="eyebrow">STUDIO</p>
+          <p className="eyebrow">创作工作区</p>
           <h1 id="studio-title">建立下一幅画面</h1>
           <p>
-            Image、Video 和 Audio 独立工作。游客可以浏览和填写输入；真实
-            Generate 前会验证登录、输入和 Credits Quote。
+            图片、视频和语音可独立创作。游客可以浏览和填写输入；真实
+            生成前会验证登录、输入和 Credits Quote。
           </p>
         </div>
 

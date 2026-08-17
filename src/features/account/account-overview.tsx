@@ -48,10 +48,36 @@ function date(value: string | null) {
 
 function modalityLabel(value: TaskRow["modality"]) {
   return {
-    text_to_image: "Image",
-    image_to_video: "Video",
-    text_to_speech: "Audio",
+    text_to_image: "图片",
+    image_to_video: "视频",
+    text_to_speech: "语音",
   }[value];
+}
+
+function statusLabel(value: string) {
+  return (
+    {
+      active: "已生效",
+      canceled: "已取消",
+      failed: "失败",
+      paid: "已支付",
+      pending: "等待确认",
+      queued: "队列中",
+      reconciliation_required: "等待对账",
+      succeeded: "已完成",
+    }[value] ?? value
+  );
+}
+
+function productLabel(value: string | null) {
+  return (
+    {
+      recurring_credit_pack: "周期性 Credits 包",
+      subscription: "订阅",
+    }[value ?? ""] ??
+    value ??
+    "订阅"
+  );
 }
 
 export async function AccountOverview() {
@@ -110,7 +136,7 @@ export async function AccountOverview() {
     <div className="account-overview">
       <section className="credit-summary" aria-labelledby="credits-title">
         <div>
-          <p className="eyebrow">CREDITS</p>
+          <p className="eyebrow">Credits</p>
           <h2 id="credits-title">可用余额</h2>
         </div>
         <dl>
@@ -134,7 +160,7 @@ export async function AccountOverview() {
       <section className="account-section" aria-labelledby="history-title">
         <div className="account-section__heading">
           <div>
-            <p className="eyebrow">HISTORY</p>
+            <p className="eyebrow">任务记录</p>
             <h2 id="history-title">最近任务</h2>
           </div>
           <Link href="/studio">新建创作</Link>
@@ -149,7 +175,7 @@ export async function AccountOverview() {
                 </div>
                 <div>
                   <span className={`status-pill status-pill--${task.status}`}>
-                    {task.status}
+                    {statusLabel(task.status)}
                   </span>
                   <small>{date(task.completed_at ?? task.created_at)}</small>
                 </div>
@@ -163,7 +189,7 @@ export async function AccountOverview() {
           <div className="empty-state">
             <p>还没有任务记录。</p>
             <Link className="button button--secondary" href="/studio">
-              打开 Studio
+              打开创作工作区
             </Link>
           </div>
         )}
@@ -172,7 +198,7 @@ export async function AccountOverview() {
       <section className="account-section" aria-labelledby="usage-title">
         <div className="account-section__heading">
           <div>
-            <p className="eyebrow">USAGE</p>
+            <p className="eyebrow">使用记录</p>
             <h2 id="usage-title">Credits 账本</h2>
           </div>
         </div>
@@ -207,7 +233,7 @@ export async function AccountOverview() {
       <section className="account-section" aria-labelledby="payment-title">
         <div className="account-section__heading">
           <div>
-            <p className="eyebrow">PAYMENT</p>
+            <p className="eyebrow">付款</p>
             <h2 id="payment-title">订阅与付款</h2>
           </div>
         </div>
@@ -217,9 +243,9 @@ export async function AccountOverview() {
             {subscriptions.length ? (
               subscriptions.map((subscription) => (
                 <p key={subscription.id}>
-                  <strong>{subscription.product_key ?? "subscription"}</strong>
+                  <strong>{productLabel(subscription.product_key)}</strong>
                   <span>
-                    {subscription.status}
+                    {statusLabel(subscription.status)}
                     {subscription.credits_per_period
                       ? ` · ${subscription.credits_per_period} Credits / 期`
                       : ""}
@@ -240,9 +266,9 @@ export async function AccountOverview() {
             {payments.length ? (
               payments.map((payment) => (
                 <p key={payment.id}>
-                  <strong>{payment.product_key}</strong>
+                  <strong>{productLabel(payment.product_key)}</strong>
                   <span>
-                    {payment.status}
+                    {statusLabel(payment.status)}
                     {payment.credits_per_period
                       ? ` · ${payment.credits_per_period} Credits / 期`
                       : ""}

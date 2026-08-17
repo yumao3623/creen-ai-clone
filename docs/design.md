@@ -12,7 +12,7 @@
 
 Home 的首屏由统一 Header、Hero 标题与说明、`进入 Studio` 和 `查看 Credits` 两个 CTA 组成。Hero 下方复用 Studio Composer 作为快速创作入口，游客可以查看和填写输入。
 
-随后是三张带媒体的能力卡片：`Text to Image`、`Image to Video`、`Text to Speech`。Audio 卡片额外提供语音样本播放器。页面底部的 Workspace 区域列出版本化 Quote、独立模态和账户记录三项产品信息，最后由全站 Footer 收束。当前 Home 没有独立 FAQ 区块。
+Composer 后展示使用既有项目媒体的创作灵感墙，再依次呈现三张带媒体的能力卡片、三步工作流、当前能力概览、服务端固定模型矩阵和事实性 FAQ。Audio 卡片额外提供语音样本播放器。Footer 使用产品、支持和法律链接分列收束。当前 Home 不展示外部用户评价、下载入口或未经实现的订阅方案。
 
 ## Landing 与内容页
 

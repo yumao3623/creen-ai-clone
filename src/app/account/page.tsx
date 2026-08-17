@@ -35,7 +35,7 @@ export default async function AccountPage() {
             {initial}
           </span>
           <div>
-            <p className="eyebrow">ACCOUNT</p>
+            <p className="eyebrow">账户</p>
             <h1 id="account-title">{displayName}</h1>
             <p>{user.email ?? "未提供邮箱"}</p>
             <p>余额、任务和付款状态只从可信服务端记录读取。</p>

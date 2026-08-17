@@ -7,8 +7,8 @@ import type { StripeProductKey } from "@/integrations/stripe/config";
 const products: ReadonlyArray<
   Readonly<{ key: StripeProductKey; label: string }>
 > = [
-  { key: "subscription", label: "Subscription" },
-  { key: "recurring_credit_pack", label: "Recurring Credit Pack" },
+  { key: "subscription", label: "订阅" },
+  { key: "recurring_credit_pack", label: "周期性 Credits 包" },
 ];
 
 function createClientKey() {
@@ -39,8 +39,7 @@ export function CheckoutButtons() {
         typeof (payload as { url?: unknown }).url === "string"
           ? (payload as { url: string }).url
           : null;
-      if (!response.ok || !url)
-        throw new Error("Checkout could not be started.");
+      if (!response.ok || !url) throw new Error("无法创建结账页。");
       window.location.assign(url);
     } catch {
       setError("暂时无法创建安全的 Stripe Checkout，请稍后重试。");
@@ -54,7 +53,7 @@ export function CheckoutButtons() {
       aria-labelledby="billing-products-title"
     >
       <div>
-        <p className="eyebrow">BILLING</p>
+        <p className="eyebrow">付款</p>
         <h2 id="billing-products-title">Stripe Sandbox</h2>
         <p>付款确认后由 Stripe 签名 Webhook 更新账户和 Credits。</p>
       </div>

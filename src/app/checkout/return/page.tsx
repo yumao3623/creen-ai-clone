@@ -41,14 +41,14 @@ export default async function CheckoutReturnPage({
     status === "paid"
       ? "付款已确认，Credits 已由签名 Webhook 写入账户。"
       : status === "canceled"
-        ? "Checkout 已取消，没有发放 Credits。"
+        ? "结账已取消，没有发放 Credits。"
         : status === "failed"
           ? "付款尚未成功，Credits 未发放。"
           : "正在等待 Stripe 签名 Webhook 确认；此页面不会发放 Credits。";
 
   return (
     <main className="state-page" id="main-content" tabIndex={-1}>
-      <p className="eyebrow">CHECKOUT RETURN</p>
+      <p className="eyebrow">付款确认</p>
       <h1>{status === "paid" ? "付款已确认" : "正在确认付款"}</h1>
       <p>{message}</p>
       <Link className="button button--primary" href="/account">
