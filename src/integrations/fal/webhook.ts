@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 
 import type {
+  FalModelKey,
   GenerationInput,
   ProviderResultReference,
   ProviderWebhookEvent,
@@ -58,6 +59,7 @@ export function parseFalWebhookEnvelope(payload: unknown): FalWebhookEnvelope {
 export function parseFalWebhook(
   input: GenerationInput,
   payload: unknown,
+  modelKey?: FalModelKey | string,
 ): ProviderWebhookEvent {
   const event = parseFalWebhookEnvelope(payload);
   if (event.status === "ERROR") {
@@ -71,7 +73,7 @@ export function parseFalWebhook(
 
   try {
     const result = mapFalResult(
-      toProviderSubmission(input),
+      toProviderSubmission(input, modelKey),
       event.externalTaskId,
       event.payload,
     );

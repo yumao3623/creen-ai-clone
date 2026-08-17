@@ -27,8 +27,8 @@ Creen 是一个统一 AI 创作工作区。用户可在同一账户中创建图�
 2. 用户选择 Image、Video 或 Audio，填写对应输入；Image-to-Video 需要先上传参考图片。
 3. 未登录用户在获取 Quote、上传参考图片或 Generate 时进入 Login/Register，并携带安全的站内 `next` 路径。
 4. 登录用户获取与输入参数匹配的 Quote；余额不足时在调用 Provider 前收到阻断提示。
-5. 用户点击 Generate 后，系统先预留 Credits，再把任务提交到 Provider；页面显示 Queued 或 Reconciliation required，并提示到 Account 查看最终状态。
-6. Webhook 完成可信状态更新后，Account 的最近任务、Credits 账本和结果状态可供核对。
+5. 用户点击 Generate 后，系统先预留 Credits，再把任务提交到 Provider；Studio 以任务 ID 恢复 Queued、Reconciliation required、完成或失败状态。
+6. Webhook 完成可信状态更新后，Studio 展示当前任务的真实媒体结果；Account 的最近任务也保留相同结果、Credits 账本和状态供回访核对。
 
 ### 付款流程
 
@@ -45,9 +45,10 @@ Creen 是一个统一 AI 创作工作区。用户可在同一账户中创建图�
 | ----------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------- | ------------------------------------- |
 | Home              | `/`                                                                                                  | 公开                                   | 介绍统一工作区和三种能力              | 进入 Studio、查看 Pricing             |
 | Studio            | `/studio`                                                                                            | 公开浏览；Quote/Upload/Generate 需登录 | 准备三模态输入并提交任务              | 切换模式、填写、上传、Quote、Generate |
+| Result Workspace  | `/studio/result?task=<taskId>`                                                                       | 需要当前任务所属会话                   | 查看当前结果和自己的创作历史          | 查看结果、打开原始结果、复用 Prompt   |
 | Create Redirect   | `/create`                                                                                            | 公开                                   | 兼容创作入口                          | 重定向至 `/studio`                    |
 | Features          | `/features`                                                                                          | 公开                                   | 展示三条创作路径                      | 进入 Studio                           |
-| Models            | `/models`                                                                                            | 公开                                   | 展示当前固定模型和模态                | 查看模型用途                          |
+| Models            | `/models`                                                                                            | 公开                                   | 展示当前已验收模型和模态              | 查看模型用途                          |
 | Pricing           | `/pricing`                                                                                           | 公开                                   | 展示模态 Credits 基准                 | 进入 Account                          |
 | Marketing Landing | `/ai-image-generator`、`/ai-video-generator`、`/text-to-image`、`/image-to-video`、`/text-to-speech` | 公开                                   | 搜索意图内容、示例和 FAQ              | 进入 Studio、浏览相关页面             |
 | Support/Legal     | `/faq`、`/about`、`/contact`、`/privacy`、`/terms`、`/refund`                                        | 公开                                   | 帮助、公司说明和法律信息              | 阅读内容、使用内链                    |
@@ -63,7 +64,7 @@ Creen 是一个统一 AI 创作工作区。用户可在同一账户中创建图�
 
 Studio 提供三个独立模式：
 
-- `Text-to-Image`：输入图片描述并选择图像尺寸；
+- `Text-to-Image`：输入图片描述，选择已验收图片模型和图像尺寸；可选真实参考图时使用兼容的 Image-to-Image 模型；
 - `Image-to-Video`：上传参考图片，输入视频描述并选择 5 秒或 10 秒时长；
 - `Text-to-Speech`：输入朗读文本，可选声音标识。
 
@@ -71,7 +72,7 @@ Studio 提供三个独立模式：
 
 输入限制来自当前服务端校验：图片 Prompt 最多 2,000 个字符；视频 Prompt 最多 2,000 个字符；语音文本最多 5,000 个字符；声音标识最多 128 个字符；参考图片仅支持 PNG、JPG、WebP，最大 10 MB。图片尺寸支持 `square`、`square_hd`、`portrait_4_3` 和 `landscape_4_3`。
 
-Quote 期间显示确定的 Credits 成本和有效期。点击 Generate 后，Studio 显示提交中、队列中、余额不足或错误信息；最终 Provider 状态和失败代码在 Account 最近任务中呈现，当前 Studio 不内嵌结果预览或下载操作。
+Quote 期间显示确定的 Credits 成本和有效期。点击 Generate 后，Studio 通过当前会话受 RLS 约束的任务读取路径展示提交中、队列中、余额不足、完成或错误信息；成功任务在同页展示由持久化 Result Reference 解析出的图片、视频或音频，并提供打开原始结果的真实链接。
 
 ### Auth
 
@@ -84,7 +85,7 @@ Quote 期间显示确定的 Credits 成本和有效期。点击 Generate 后，S
 
 ### Generation 与 Credits
 
-- 三种模态通过 fal.ai 执行真实生成，不使用生产 Mock 结果；
+- 三种模态通过 fal.ai 执行真实生成，不使用生产 Mock 结果；每种模态按 Model Registry 选择已验收模型，Quote、Task、Provider payload 和 Result 使用同一 `modelKey`；
 - 用户先获取与输入参数绑定、有效期 15 分钟的 Credits Quote；
 - 提交时系统检查余额、创建任务并预留 Credits；
 - Provider 成功时结算，失败时补偿；
@@ -102,7 +103,7 @@ Quote 期间显示确定的 Credits 成本和有效期。点击 Generate 后，S
 
 ### Account 与 History
 
-Account 显示当前身份（邮箱、登录方式和 User ID）、可用与已预留 Credits、最近任务、不可变 Ledger、付款记录和订阅状态。最近任务展示模态、模型、状态、时间和失败代码；账本展示原因、时间和 Credit 增减；付款与订阅展示商品、状态、每期 Credits 和当前周期。用户只能访问自己的数据，页面提供退出和开始新创作入口。
+Account 显示当前身份（邮箱、登录方式和 User ID）、可用与已预留 Credits、最近任务、不可变 Ledger、付款记录和订阅状态。最近任务展示模态、模型、状态、时间和失败代码，并为成功任务展示持久化的图片、视频或音频结果及原始文件链接；账本展示原因、时间和 Credit 增减；付款与订阅展示商品、状态、每期 Credits 和当前周期。用户只能访问自己的数据，页面提供退出和开始新创作入口。
 
 ### SEO 页面
 

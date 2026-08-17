@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseGenerationInput } from "@/domain/generation/modality-contract";
 import {
   FalGenerationAdapter,
+  falPayload,
   mapFalResult,
   type FalClientLike,
 } from "@/integrations/fal/adapter";
@@ -38,6 +39,69 @@ function isolatedFalClient(): FalClientLike {
 }
 
 describe("fal generation adapter", () => {
+  it("maps each verified model to its provider-specific payload", () => {
+    const image = parseGenerationInput({
+      modality: "text_to_image",
+      prompt: "red apple",
+    });
+    expect(
+      falPayload({
+        modality: image.modality,
+        modelId: "fal-ai/flux/dev",
+        modelKey: "fal.flux.dev",
+        input: image,
+      }),
+    ).toMatchObject({ prompt: "red apple" });
+
+    const reference = parseGenerationInput({
+      modality: "text_to_image",
+      prompt: "blue studio",
+      referenceImageUrl: "https://fal.media/input.png",
+    });
+    expect(
+      falPayload({
+        modality: reference.modality,
+        modelId: "fal-ai/flux/dev/image-to-image",
+        modelKey: "fal.flux.dev.image_to_image",
+        input: reference,
+      }),
+    ).toMatchObject({
+      image_url: "https://fal.media/input.png",
+      strength: 0.8,
+    });
+
+    const video = parseGenerationInput({
+      modality: "image_to_video",
+      imageUrl: "https://fal.media/input.png",
+      prompt: "slow turn",
+      duration: "5",
+    });
+    expect(
+      falPayload({
+        modality: video.modality,
+        modelId: "fal-ai/kling-video/v3/standard/image-to-video",
+        modelKey: "fal.kling.v3.standard.image_to_video",
+        input: video,
+      }),
+    ).toMatchObject({
+      start_image_url: "https://fal.media/input.png",
+      generate_audio: false,
+    });
+
+    const speech = parseGenerationInput({
+      modality: "text_to_speech",
+      text: "测试",
+    });
+    expect(
+      falPayload({
+        modality: speech.modality,
+        modelId: "fal-ai/minimax/speech-2.8-turbo",
+        modelKey: "fal.minimax.speech_2_8_turbo",
+        input: speech,
+      }),
+    ).toMatchObject({ prompt: "测试" });
+  });
+
   it("submits through the queue API and checks queue status", async () => {
     const adapter = new FalGenerationAdapter(isolatedFalClient(), {
       webhookUrl: "https://app.example.com/api/webhooks/fal",

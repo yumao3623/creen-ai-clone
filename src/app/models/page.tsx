@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { modelContent } from "@/content/models";
+import { generationModels } from "@/domain/generation/model-registry";
 import { publicPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = publicPageMetadata({
@@ -15,18 +15,23 @@ export default function ModelsPage() {
     <main className="listing-page" id="main-content" tabIndex={-1}>
       <section className="listing-page__heading">
         <p className="eyebrow">模型</p>
-        <h1>为三种创作模态选择固定模型</h1>
-        <p>模型选择和参数契约由服务端验证，浏览器不提交模型标识或价格。</p>
+        <h1>为三种创作模态选择已验收模型</h1>
+        <p>
+          Studio 只显示与当前输入兼容且已完成真实 Provider
+          验收的模型；价格由服务端 Quote 决定。
+        </p>
       </section>
       <section className="model-table" aria-label="支持的模型">
-        {modelContent.map(({ modality, model, purpose, description }) => (
-          <article key={model}>
-            <p>{modalityLabel(modality)}</p>
-            <code>{model}</code>
-            <span>{purpose}</span>
-            <p>{description}</p>
-          </article>
-        ))}
+        {generationModels
+          .filter((model) => model.status === "verified")
+          .map((model) => (
+            <article key={model.key}>
+              <p>{modalityLabel(model.modality)}</p>
+              <code>{model.key}</code>
+              <span>{model.label}</span>
+              <p>{model.description}</p>
+            </article>
+          ))}
       </section>
     </main>
   );
@@ -34,11 +39,11 @@ export default function ModelsPage() {
 
 function modalityLabel(modality: string) {
   switch (modality) {
-    case "Text to Image":
+    case "text_to_image":
       return "文本生成图片";
-    case "Image to Video":
+    case "image_to_video":
       return "图片生成视频";
-    case "Text to Speech":
+    case "text_to_speech":
       return "文本生成语音";
     default:
       return modality;

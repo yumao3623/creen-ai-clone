@@ -3,26 +3,33 @@ import type {
   GenerationModality,
   GenerationStatus,
 } from "@/domain/generation/state";
+import {
+  defaultModelForModality,
+  defaultModelKeys,
+  modelDefinitionForKey,
+  type FalModelId,
+  type FalModelKey,
+} from "./model-registry";
+
+export {
+  defaultModelKeys,
+  type FalModelId,
+  type FalModelKey,
+} from "./model-registry";
 
 export const falModelIds = {
-  text_to_image: "fal-ai/flux/schnell",
-  image_to_video: "fal-ai/kling-video/v2.1/standard/image-to-video",
-  text_to_speech: "fal-ai/minimax/speech-02-hd",
+  text_to_image: defaultModelForModality("text_to_image").id,
+  image_to_video: defaultModelForModality("image_to_video").id,
+  text_to_speech: defaultModelForModality("text_to_speech").id,
 } as const;
 
-export const falModelKeys = {
-  text_to_image: "fal.flux.schnell",
-  image_to_video: "fal.kling.v2_1.standard.image_to_video",
-  text_to_speech: "fal.minimax.speech_02_hd",
-} as const;
-
-export type FalModelId = (typeof falModelIds)[GenerationModality];
-export type FalModelKey = (typeof falModelKeys)[GenerationModality];
+export const falModelKeys = defaultModelKeys;
 
 export type TextToImageInput = Readonly<{
   modality: "text_to_image";
   prompt: string;
   imageSize?: "square" | "square_hd" | "portrait_4_3" | "landscape_4_3";
+  referenceImageUrl?: string;
 }>;
 
 export type ImageToVideoInput = Readonly<{
@@ -122,11 +129,17 @@ function optionalString(
   return nonEmptyText(value, field, maximum);
 }
 
+function optionalHttpsUrl(value: unknown, field: string): string | undefined {
+  if (value === undefined) return undefined;
+  return httpsUrl(value, field);
+}
+
 export function modelForModality(modality: GenerationModality): Readonly<{
   id: FalModelId;
   key: FalModelKey;
 }> {
-  return { id: falModelIds[modality], key: falModelKeys[modality] };
+  const model = defaultModelForModality(modality);
+  return { id: model.id as FalModelId, key: model.key as FalModelKey };
 }
 
 export function parseGenerationInput(value: unknown): GenerationInput {
@@ -147,10 +160,15 @@ export function parseGenerationInput(value: unknown): GenerationInput {
       ) {
         throw new GenerationInputError("imageSize is not supported.");
       }
+      const referenceImageUrl =
+        input.referenceImageUrl === undefined
+          ? undefined
+          : optionalHttpsUrl(input.referenceImageUrl, "referenceImageUrl");
       return {
         modality: "text_to_image",
         prompt: nonEmptyText(input.prompt, "prompt", 2_000),
         ...(imageSize === undefined ? {} : { imageSize }),
+        ...(referenceImageUrl === undefined ? {} : { referenceImageUrl }),
       };
     }
     case "image_to_video": {
@@ -182,12 +200,28 @@ export function parseGenerationInput(value: unknown): GenerationInput {
 
 export function toProviderSubmission(
   input: GenerationInput,
+  modelKey?: FalModelKey | string,
 ): ProviderSubmission {
-  const model = modelForModality(input.modality);
+  const selectedKey = modelKey ?? modelForModality(input.modality).key;
+  const model = modelDefinitionForKey(selectedKey);
+  if (!model || model.modality !== input.modality) {
+    throw new GenerationInputError(
+      "The selected model does not match the modality.",
+    );
+  }
+  const expectsReferenceImage =
+    input.modality === "text_to_image" && input.referenceImageUrl !== undefined;
+  if (model.supportsReferenceImage !== expectsReferenceImage) {
+    throw new GenerationInputError(
+      expectsReferenceImage
+        ? "The selected model does not support reference images."
+        : "A reference-image model requires a reference image.",
+    );
+  }
   return {
     modality: input.modality,
-    modelId: model.id,
-    modelKey: model.key,
+    modelId: model.id as FalModelId,
+    modelKey: model.key as FalModelKey,
     input,
   };
 }

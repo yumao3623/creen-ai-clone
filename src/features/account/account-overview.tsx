@@ -1,5 +1,12 @@
 import Link from "next/link";
 
+/* eslint-disable @next/next/no-img-element -- Result URLs are runtime Provider URLs. */
+
+import {
+  readGenerationPrompt,
+  readGenerationResultAssets,
+} from "@/domain/generation/result";
+import { modelDefinitionForKey } from "@/domain/generation/model-registry";
 import { CheckoutButtons } from "@/features/billing/checkout-buttons";
 import { createSupabaseServerClient } from "@/integrations/supabase/server";
 
@@ -12,6 +19,8 @@ type TaskRow = Readonly<{
   modality: "text_to_image" | "image_to_video" | "text_to_speech";
   status: string;
   model_key: string;
+  normalized_input: unknown;
+  result_reference: unknown;
   created_at: string;
   completed_at: string | null;
   failure_code: string | null;
@@ -80,6 +89,41 @@ function productLabel(value: string | null) {
   );
 }
 
+function TaskResult({ task }: { task: TaskRow }) {
+  const assets = readGenerationResultAssets(task.result_reference);
+  const prompt = readGenerationPrompt(task.modality, task.normalized_input);
+
+  if (task.status !== "succeeded" || assets.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="account-task-result">
+      {prompt ? <p>{prompt}</p> : null}
+      <div className="account-task-result__assets">
+        {assets.map((asset) => (
+          <figure key={asset.url}>
+            {asset.contentType === "image" ? (
+              <img alt="生成图片" src={asset.url} />
+            ) : asset.contentType === "video" ? (
+              <video controls preload="metadata" src={asset.url}>
+                您的浏览器不支持视频播放。
+              </video>
+            ) : (
+              <audio controls preload="metadata" src={asset.url}>
+                您的浏览器不支持音频播放。
+              </audio>
+            )}
+            <a href={asset.url} rel="noreferrer" target="_blank">
+              打开原始结果
+            </a>
+          </figure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export async function AccountOverview() {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
@@ -98,7 +142,7 @@ export async function AccountOverview() {
     supabase
       .from("generation_tasks")
       .select(
-        "id,modality,status,model_key,created_at,completed_at,failure_code",
+        "id,modality,status,model_key,normalized_input,result_reference,created_at,completed_at,failure_code",
       )
       .order("created_at", { ascending: false })
       .limit(12),
@@ -171,7 +215,10 @@ export async function AccountOverview() {
               <article key={task.id}>
                 <div>
                   <strong>{modalityLabel(task.modality)}</strong>
-                  <span>{task.model_key}</span>
+                  <span title={task.model_key}>
+                    {modelDefinitionForKey(task.model_key)?.label ??
+                      task.model_key}
+                  </span>
                 </div>
                 <div>
                   <span className={`status-pill status-pill--${task.status}`}>
@@ -182,6 +229,7 @@ export async function AccountOverview() {
                 {task.failure_code ? (
                   <p>失败原因：{task.failure_code}</p>
                 ) : null}
+                <TaskResult task={task} />
               </article>
             ))}
           </div>

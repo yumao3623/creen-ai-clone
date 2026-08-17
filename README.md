@@ -8,9 +8,9 @@
 
 - 邮箱密码注册、登录、会话保持、退出登录和受保护账户页面；
 - 真实 Google OAuth 登录及 `/auth/callback` 回调；
-- 统一 Studio：`Text-to-Image`、`Image-to-Video`、`Text-to-Speech` 三个独立创作模式；
+- 统一 Studio：`Text-to-Image`、`Image-to-Video`、`Text-to-Speech` 三个独立创作模式，支持已验收模型选择和真实图片参考图能力；
 - 提交前可信 Credits Quote，余额检查、预留、结算、失败补偿和不可变 Ledger；
-- 任务异步队列、Webhook 回调、重复回调幂等处理和任务历史；
+- 任务异步队列、Webhook 回调、重复回调幂等处理，以及 Studio 和 Account 中的真实结果查看；
 - Stripe Hosted Checkout Sandbox，Subscription 与 recurring Credit Pack 两类商品；
 - Home、Features、Models、Pricing、五个搜索意图 Landing Page、FAQ、About、Contact 与法律页面；
 - 路由级 Metadata、Canonical、JSON-LD、`robots.txt`、`sitemap.xml` 和私有页面 `noindex`。

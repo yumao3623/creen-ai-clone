@@ -13,6 +13,7 @@ describe("fal webhook repository", () => {
         data: [
           {
             task_id: "task-1",
+            model_key: "fal.flux.schnell",
             normalized_input: {
               modality: "text_to_image",
               prompt: "rainy station",

@@ -28,6 +28,7 @@ export type FalWebhookRpcClient = Readonly<{
 
 export type FalWebhookContext = Readonly<{
   taskId: string;
+  modelKey: string;
   normalizedInput: GenerationInput;
   taskStatus: GenerationStatus;
 }>;
@@ -69,6 +70,7 @@ function firstRow(data: unknown): unknown {
 
 function isContextRow(value: unknown): value is Readonly<{
   task_id: string;
+  model_key: string;
   normalized_input: GenerationInput;
   task_status: GenerationStatus;
 }> {
@@ -78,6 +80,7 @@ function isContextRow(value: unknown): value is Readonly<{
   const row = value as Record<string, unknown>;
   return (
     typeof row.task_id === "string" &&
+    typeof row.model_key === "string" &&
     !!row.normalized_input &&
     typeof row.normalized_input === "object" &&
     isStatus(row.task_status)
@@ -117,6 +120,7 @@ export class SupabaseFalWebhookRepository {
 
     return {
       taskId: row.task_id,
+      modelKey: row.model_key,
       normalizedInput: row.normalized_input,
       taskStatus: row.task_status,
     };

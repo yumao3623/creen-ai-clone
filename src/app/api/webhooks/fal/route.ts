@@ -63,6 +63,7 @@ export async function POST(request: Request) {
     const finalized = parseFalWebhook(
       parseGenerationInput(context.normalizedInput),
       payload,
+      context.modelKey,
     );
     const result = await repository.finalize({
       externalTaskId: event.externalTaskId,

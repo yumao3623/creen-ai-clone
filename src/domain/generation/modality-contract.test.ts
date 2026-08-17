@@ -52,6 +52,17 @@ describe("Phase 6 generation modality contracts", () => {
     ).toMatchObject({ modality: "text_to_speech", voiceId: "Wise_Woman" });
   });
 
+  it("keeps the selected model in the provider submission", () => {
+    const input = parseGenerationInput({
+      modality: "text_to_image",
+      prompt: "a red apple",
+    });
+    expect(toProviderSubmission(input, "fal.flux.dev")).toMatchObject({
+      modelKey: "fal.flux.dev",
+      modelId: "fal-ai/flux/dev",
+    });
+  });
+
   it("rejects unsafe input URLs and unsupported modalities before fal is called", () => {
     expect(() =>
       parseGenerationInput({

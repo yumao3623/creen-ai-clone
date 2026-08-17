@@ -9,11 +9,16 @@
 | Modality      | Model Key                                | Parameter  | Credits |                     Provider Cost Basis |
 | ------------- | ---------------------------------------- | ---------- | ------: | --------------------------------------: |
 | Text → Image  | `fal.flux.schnell`                       | `default`  |      30 |                               USD 0.003 |
+| Text → Image  | `fal.flux.dev`                           | `default`  |     250 |                               USD 0.025 |
+| Image → Image | `fal.flux.dev.image_to_image`            | `default`  |     300 |                               USD 0.030 |
 | Image → Video | `fal.kling.v2_1.standard.image_to_video` | 5 秒       |   2,800 |                                USD 0.28 |
 | Image → Video | `fal.kling.v2_1.standard.image_to_video` | 10 秒      |   5,600 | USD 0.56，按已验证 5 秒成本保守线性推导 |
+| Image → Video | `fal.kling.v3.standard.image_to_video`   | 5 秒       |   4,200 |                                USD 0.42 |
+| Image → Video | `fal.kling.v3.standard.image_to_video`   | 10 秒      |   8,400 |                                USD 0.84 |
 | Text → Speech | `fal.minimax.speech_02_hd`               | 每 10 字符 |       6 |                    USD 0.0006 / 10 字符 |
+| Text → Speech | `fal.minimax.speech_2_8_turbo`           | 每 10 字符 |       6 |                    USD 0.0006 / 10 字符 |
 
-价格来自 Phase 6 的真实 fal Usage Evidence。Phase 7 不增加会员折扣、优惠券、Trial、退款、税务或多币种规则。
+价格来自 Phase 6 与 2026-08-18 多模型 Provider 验收。Phase 7 不增加会员折扣、优惠券、Trial、退款、税务或多币种规则。备选模型价格由 `202608180001_multimodel_prices.sql` 写入同一版本化 `model_prices` 表，该迁移已应用到目标 Supabase。
 
 ## 事务边界
 
@@ -35,7 +40,7 @@
 - `POST /api/generate`：要求 `clientKey`、`quoteId` 和同一标准 Input；余额不足返回 `409 insufficient_credits`，且不会调用 fal；
 - `POST /api/webhooks/fal`：验证 callback token、映射 Result，然后调用原子最终化 RPC。
 
-Studio 当前只为既有 Text → Image Foundation 增加“获取报价 → Generate”最小交互。三模态完整 Studio、History 和 Credits 页面仍属于 Phase 9。
+Studio、Account 与 Credits 页面均已使用相同的三模态 Generation 契约；Result 展示只读取已结算成功任务的持久化 Result Reference，不改变 Quote、Reserve、Settle 或 Compensation 规则。
 
 ## 应用与验证
 

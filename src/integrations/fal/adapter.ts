@@ -74,27 +74,77 @@ function assetTypeForSubmission(submission: ProviderSubmission): FalAssetType {
   }
 }
 
-function falPayload(input: GenerationInput): Record<string, unknown> {
-  switch (input.modality) {
-    case "text_to_image":
+export function falPayload(
+  submission: ProviderSubmission,
+): Record<string, unknown> {
+  switch (submission.modelKey) {
+    case "fal.flux.schnell":
+    case "fal.flux.dev":
+      if (submission.input.modality !== "text_to_image") {
+        throw new FalAdapterError("Image model received an invalid input.");
+      }
       return {
-        prompt: input.prompt,
-        ...(input.imageSize === undefined
+        prompt: submission.input.prompt,
+        ...(submission.input.imageSize === undefined
           ? {}
-          : { image_size: input.imageSize }),
+          : { image_size: submission.input.imageSize }),
       };
-    case "image_to_video":
+    case "fal.flux.dev.image_to_image":
+      if (
+        submission.input.modality !== "text_to_image" ||
+        !submission.input.referenceImageUrl
+      ) {
+        throw new FalAdapterError(
+          "Image-to-image model requires a reference image.",
+        );
+      }
       return {
-        image_url: input.imageUrl,
-        prompt: input.prompt,
-        ...(input.duration === undefined ? {} : { duration: input.duration }),
+        image_url: submission.input.referenceImageUrl,
+        prompt: submission.input.prompt,
+        strength: 0.8,
       };
-    case "text_to_speech":
+    case "fal.kling.v2_1.standard.image_to_video":
+      if (submission.input.modality !== "image_to_video") {
+        throw new FalAdapterError("Video model received an invalid input.");
+      }
       return {
-        text: input.text,
-        ...(input.voiceId === undefined
+        image_url: submission.input.imageUrl,
+        prompt: submission.input.prompt,
+        ...(submission.input.duration === undefined
           ? {}
-          : { voice_setting: { voice_id: input.voiceId } }),
+          : { duration: submission.input.duration }),
+      };
+    case "fal.kling.v3.standard.image_to_video":
+      if (submission.input.modality !== "image_to_video") {
+        throw new FalAdapterError("Video model received an invalid input.");
+      }
+      return {
+        start_image_url: submission.input.imageUrl,
+        prompt: submission.input.prompt,
+        generate_audio: false,
+        ...(submission.input.duration === undefined
+          ? {}
+          : { duration: submission.input.duration }),
+      };
+    case "fal.minimax.speech_02_hd":
+      if (submission.input.modality !== "text_to_speech") {
+        throw new FalAdapterError("Speech model received an invalid input.");
+      }
+      return {
+        text: submission.input.text,
+        ...(submission.input.voiceId === undefined
+          ? {}
+          : { voice_setting: { voice_id: submission.input.voiceId } }),
+      };
+    case "fal.minimax.speech_2_8_turbo":
+      if (submission.input.modality !== "text_to_speech") {
+        throw new FalAdapterError("Speech model received an invalid input.");
+      }
+      return {
+        prompt: submission.input.text,
+        ...(submission.input.voiceId === undefined
+          ? {}
+          : { voice_setting: { voice_id: submission.input.voiceId } }),
       };
   }
 }
@@ -156,10 +206,13 @@ export class FalGenerationAdapter {
     return url.toString();
   }
 
-  async submit(input: GenerationInput): Promise<ProviderJobReference> {
-    const submission = toProviderSubmission(input);
+  async submit(
+    input: GenerationInput,
+    modelKey?: string,
+  ): Promise<ProviderJobReference> {
+    const submission = toProviderSubmission(input, modelKey);
     const queued = await this.client.queue.submit(submission.modelId, {
-      input: falPayload(input) as never,
+      input: falPayload(submission) as never,
       webhookUrl: this.webhookUrl(),
     });
 
@@ -173,8 +226,9 @@ export class FalGenerationAdapter {
   async getStatus(
     input: GenerationInput,
     externalTaskId: string,
+    modelKey?: string,
   ): Promise<ProviderJobState> {
-    const submission = toProviderSubmission(input);
+    const submission = toProviderSubmission(input, modelKey);
     const status = await this.client.queue.status(submission.modelId, {
       requestId: externalTaskId,
     });
@@ -184,8 +238,9 @@ export class FalGenerationAdapter {
   async getResult(
     input: GenerationInput,
     externalTaskId: string,
+    modelKey?: string,
   ): Promise<ProviderResultReference> {
-    const submission = toProviderSubmission(input);
+    const submission = toProviderSubmission(input, modelKey);
     const result = await this.client.queue.result(submission.modelId, {
       requestId: externalTaskId,
     });

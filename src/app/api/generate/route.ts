@@ -7,10 +7,12 @@ import {
 import { SupabaseGenerationLifecycleRepository } from "@/db/generation-lifecycle-repository";
 import {
   GenerationInputError,
+  modelForModality,
   parseGenerationInput,
   toProviderSubmission,
 } from "@/domain/generation/modality-contract";
 import { hashGenerationRequest } from "@/domain/generation/request";
+import { selectableModelForInput } from "@/domain/generation/model-registry";
 import { createFalGenerationAdapter } from "@/integrations/fal/adapter";
 import { createSupabaseAdminClient } from "@/integrations/supabase/admin";
 import { createSupabaseServerClient } from "@/integrations/supabase/server";
@@ -61,8 +63,19 @@ export async function POST(request: Request) {
   }
 
   let input;
+  let modelKey: string;
   try {
     input = parseGenerationInput(requestBody.input);
+    modelKey =
+      typeof requestBody.modelKey === "string"
+        ? requestBody.modelKey
+        : modelForModality(input.modality).key;
+    selectableModelForInput(
+      modelKey,
+      input.modality,
+      input.modality === "text_to_image" &&
+        input.referenceImageUrl !== undefined,
+    );
   } catch (error) {
     return generationError(
       error instanceof GenerationInputError
@@ -84,7 +97,7 @@ export async function POST(request: Request) {
     return generationError("generation_unavailable", 503);
   }
 
-  const submission = toProviderSubmission(input);
+  const submission = toProviderSubmission(input, modelKey);
   const requestHash = hashGenerationRequest({
     modality: input.modality,
     modelKey: submission.modelKey,
@@ -128,7 +141,7 @@ export async function POST(request: Request) {
 
   let providerJob;
   try {
-    providerJob = await adapter.submit(input);
+    providerJob = await adapter.submit(input, submission.modelKey);
   } catch {
     try {
       await lifecycleRepository.compensate(

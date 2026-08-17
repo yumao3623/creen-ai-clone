@@ -52,11 +52,11 @@ Route Handler 只做输入解析、认证和命令编排。余额算术、状态
 
 Generation 从 `draft` 经 `quoted`、`reserving`、`queued`、`processing` 进入 `succeeded`，也可进入 `failed`、`canceled`、`expired` 或 `reconciliation_required`。Quote 与输入参数和不可变价格版本绑定。
 
-提交时服务端校验模态、模型和参数，在一个数据库事务中完成所有权检查、余额检查、任务创建、Credits Reservation、幂等记录和 Outbox 记录。fal Queue 返回 External Task ID 后持久化；Webhook 通过高熵 URL token、Raw Body SHA-256 Receipt 和唯一约束完成回调幂等。Provider 状态未知时进入对账状态，不伪造结果。
+提交时服务端校验模态、Model Registry、参考图能力和参数，在一个数据库事务中完成所有权检查、余额检查、任务创建、Credits Reservation、幂等记录和 Outbox 记录。fal Queue 返回 External Task ID 后持久化；Provider adapter 按任务的 `model_key` 选择 payload。Webhook 通过高熵 URL token、Raw Body SHA-256 Receipt 和唯一约束完成回调幂等，并从任务上下文读取同一 `model_key` 映射 Result。认证用户通过 `GET /api/generations/[taskId]` 读取自己的任务；该 Route Handler 使用普通会话 Supabase Client 和现有 RLS，未知任务与其他用户的任务都只返回 Not Found。Provider 状态未知时进入对账状态，不伪造结果。
 
 ## Credits
 
-Credits 使用整数最小单位。当前报价规则为：Text-to-Image 30 Credits；Image-to-Video 5 秒 2,800 Credits、10 秒 5,600 Credits；Text-to-Speech 每 10 个字符 6 Credits，至少收取一组。系统按 Quote 做 Reserve，成功做 Settle，失败或取消做 Compensation，并写入不可变 Ledger。Subscription Lot 优先于 recurring Pack Lot；重复提交只返回既有任务。
+Credits 使用整数最小单位。当前报价从版本化 `model_prices` 按 `model_key` 和参数计算：Flux Schnell 30、Flux Dev 250、Flux Dev Image-to-Image 300；Kling 2.1 5/10 秒 2,800/5,600，Kling 3 5/10 秒 4,200/8,400；两种 MiniMax TTS 每 10 个字符 6。系统按 Quote 做 Reserve，成功做 Settle，失败或取消做 Compensation，并写入不可变 Ledger。Subscription Lot 优先于 recurring Pack Lot；重复提交只返回既有任务。
 
 ## Stripe
 

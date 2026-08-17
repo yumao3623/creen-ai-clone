@@ -1,0 +1,45 @@
+{
+  "runId": "multimodel-2026-08-18",
+  "startedAt": "2026-08-18T03:59:00.000Z",
+  "previousActualProviderChargeUsd": 0.2866,
+  "estimatedAdditionalProviderChargeUsd": 0.535,
+  "estimatedCumulativeProviderChargeUsd": 0.8216,
+  "budgetUsd": 5,
+  "status": "succeeded",
+  "results": {
+    "fluxDev": {
+      "model": "fal-ai/flux/dev",
+      "modelKey": "fal.flux.dev",
+      "requestId": "01a01150-8cb8-7ae3-a94a-cb5d2afd9962",
+      "status": "COMPLETED",
+      "resultUrl": "https://v3b.fal.media/files/b/0aa6bda8/TdQBmyIHZeOZHv8XLSUVr.jpg",
+      "estimatedCostUsd": 0.025
+    },
+    "fluxDevImageToImage": {
+      "model": "fal-ai/flux/dev/image-to-image",
+      "modelKey": "fal.flux.dev.image_to_image",
+      "requestId": "01a01150-9ae7-78a1-8b2b-b9cd04e35d93",
+      "status": "COMPLETED",
+      "resultUrl": "https://v3b.fal.media/files/b/0aa6bda9/bgeuJnASzcPBn1EO2sGC1.jpg",
+      "estimatedCostUsd": 0.03
+    },
+    "klingV3": {
+      "model": "fal-ai/kling-video/v3/standard/image-to-video",
+      "modelKey": "fal.kling.v3.standard.image_to_video",
+      "requestId": "01a01150-ba8c-7922-9ecb-6ee42a7f7ddd",
+      "status": "COMPLETED",
+      "resultUrl": "https://v3b.fal.media/files/b/0aa6bdb5/QnU241-tvGiPmv29cgkXO_output.mp4",
+      "generateAudio": false,
+      "durationSeconds": 5,
+      "estimatedCostUsd": 0.42
+    },
+    "minimaxSpeech28Turbo": {
+      "model": "fal-ai/minimax/speech-2.8-turbo",
+      "modelKey": "fal.minimax.speech_2_8_turbo",
+      "requestId": "01a01152-7d3e-7430-be37-549b994b661c",
+      "status": "COMPLETED",
+      "voiceId": "Wise_Woman",
+      "estimatedCostUsd": 0.06
+    }
+  }
+}

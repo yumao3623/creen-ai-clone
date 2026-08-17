@@ -12,7 +12,7 @@
 
 Home 的首屏由统一 Header、居中 Hero 标题和紧凑 Composer 组成。桌面端 Composer 使用单层三行面板：模式栏、输入区和参数/报价/提交栏；图片模式的桌面尺寸约为 1280 x 280px。游客可以查看和填写输入，实际获取 Quote 或提交时仍由既有登录边界处理。Studio 页面保留完整工作区布局，不随首页压缩。
 
-Composer 后直接进入默认选中的“影片 / 图片”分类与可悬停的创作灵感流。两个分类分别展示现有视频和图片素材；每项可将参考提示词带回对应模式的 Composer，视频模式仍要求用户上传自己的参考图片。页面随后呈现“什么是 Creen？”的三张真实模态能力卡、三步工作流、六个已实现能力范围内的适用场景、服务端固定模型矩阵和事实性 FAQ。Footer 使用产品、支持和法律链接分列收束。当前 Home 不展示外部用户评价、下载入口、统计卡或未经实现的订阅方案。
+Composer 后直接进入默认选中的“影片 / 图片”分类与可悬停的创作灵感流。两个分类分别展示现有视频和图片素材；每项可将参考提示词带回对应模式的 Composer，视频模式仍要求用户上传自己的参考图片。页面随后呈现“什么是 Creen？”的三张真实模态能力卡、三步工作流、六个已实现能力范围内的适用场景、已验收模型矩阵和事实性 FAQ。Footer 使用产品、支持和法律链接分列收束。当前 Home 不展示外部用户评价、下载入口、统计卡或未经实现的订阅方案。
 
 ## Landing 与内容页
 
@@ -20,21 +20,21 @@ Landing Page 采用一致的内容层级：搜索意图 H1、创作入口或示�
 
 ## Features 与 Models
 
-Features 页面使用一个标题区和三张能力卡片，分别说明 Image、Video、Audio 的创作路径；每张卡片都提供进入 Studio 的 CTA。Models 页面使用列表式模型内容，展示三种模态对应的服务端固定模型、用途和简要说明；页面不提供浏览器侧的模型选择或价格编辑。
+Features 页面使用一个标题区和三张能力卡片，分别说明 Image、Video、Audio 的创作路径；每张卡片都提供进入 Studio 的 CTA。Models 页面使用列表式模型内容，展示已验收模型、用途和简要说明；Studio 的模型选择只显示 registry 中与当前模态和输入兼容、且已完成真实 Provider 验收的模型，浏览器不能编辑价格。
 
 ## Studio 三模态
 
 Studio 以同一工作区承载三个独立 Tab：
 
-| 模式  | 输入               | 关键参数     | 结果/状态路径                        |
-| ----- | ------------------ | ------------ | ------------------------------------ |
-| Image | 图片描述           | 图像尺寸     | fal 任务，最终状态在 Account History |
-| Video | 参考图片、运动描述 | 5 秒或 10 秒 | fal 任务，最终状态在 Account History |
-| Audio | 朗读文本           | 可选声音标识 | fal 任务，最终状态在 Account History |
+| 模式  | 输入                     | 关键参数       | 结果/状态路径                            |
+| ----- | ------------------------ | -------------- | ---------------------------------------- |
+| Image | 图片描述，可选真实参考图 | 图像尺寸、模型 | fal 任务，Studio 与 Account 展示真实图片 |
+| Video | 参考图片、运动描述       | 5 秒或 10 秒   | fal 任务，Studio 与 Account 展示真实视频 |
+| Audio | 朗读文本                 | 可选声音标识   | fal 任务，Studio 与 Account 展示真实音频 |
 
 Tab 切换会清除不匹配的报价。用户可以在登录前浏览和填写表单；获取 Quote、上传参考图片和 Generate 会触发登录要求。提交区域显示 Quote、Credits 成本和任务状态。
 
-Composer 的具体交互如下：Image 模式显示 Prompt 和图像尺寸；Video 模式显示参考图片上传、运动描述和 5/10 秒单选；Audio 模式显示朗读文本和可选声音标识。Quote 未获取时显示“获取报价”或访客的“登录后获取报价”，Quote 获取后显示成本并启用 Generate。Studio 当前不会在本页展示生成媒体；任务进入队列后提示到 History 查看最终状态。
+Composer 的具体交互如下：Image 模式显示 Prompt、已验收模型、图像尺寸；当已选择参考图时只显示兼容的 Image-to-Image 模型并把真实上传 URL 传给 Provider。Video 模式显示参考图片上传、运动描述、已验收模型和 5/10 秒单选；Audio 模式显示朗读文本、仅包含真实实现的“文字转语音”工具选择器、已验收模型、明确的默认声音 `Wise_Woman`，以及可选的手工 Voice ID 输入。当前没有可靠的公开 Voice ID 枚举，因此不展示伪造的声音列表或预览。任何模型或输入变化都会使旧 Quote 失效。提交按钮在一次生成请求完成或失败前保持锁定，避免重复点击创建多个任务。提交后跳转到 `/studio/result?task=<taskId>`；Result Workspace 使用当前认证会话读取任务，并在左侧显示同一用户的创作历史。任务 hydration 会以持久化的 `task.modality` 恢复对应的活动 Tab 和 Composer，避免刷新后回落到图片模式。任务仍在 Provider 侧时自动刷新状态，成功后在 Composer 上方按 Prompt、居中媒体、Model 和操作的顺序展示持久化的图片、视频或音频。当前真实操作仅包括打开原始结果，以及将已保存的 Prompt 复用到对应 Composer；视频复用 Prompt 时仍要求用户重新上传参考图片。Composer 保持可继续下一次创作；用户切换 Tab 只改变下一次创作，不修改已读取任务的模态和结果关联。
 
 ## Pricing
 
@@ -76,7 +76,7 @@ Studio 当前 UI 直接呈现以下状态：
 | Queued                  | 结果区域显示任务已提交和 History 提示        | 离开页面或到 Account 查看 |
 | Reconciliation required | 说明 Provider 已接受但状态正在对账           | 等待可信状态，不重复提交  |
 
-Provider 的 `processing`、`succeeded`、`failed` 等终态由 Account 最近任务中的状态和失败代码呈现；当前 Studio 没有单独的实时结果预览状态。
+Provider 的 `processing`、`succeeded`、`failed` 等终态由 Studio Result Workspace 与 Account 最近任务共同呈现。Studio 对未终态任务自动刷新；仅在 `succeeded` 且存在持久化 HTTPS Result Reference 时渲染媒体，不以首页素材或 fixture 代替结果。
 
 ### 支付状态
 
@@ -84,12 +84,12 @@ Checkout 对用户显示 Pending、Paid、Canceled、Failed 和 Webhook delayed�
 
 ## 页面状态对照
 
-| 页面            | Loading              | Empty                           | Error                               | Success/终态                                            |
-| --------------- | -------------------- | ------------------------------- | ----------------------------------- | ------------------------------------------------------- |
-| Auth            | 提交按钮显示正在提交 | 不适用                          | 字段错误、认证服务错误、Google 错误 | 成功后跳转，注册确认可能显示成功提示                    |
-| Account         | 服务端页面加载       | 无任务、无账本、无付款/订阅记录 | 部分账户记录无法读取                | 余额、任务、账本和支付状态可读                          |
-| Checkout Return | Pending 文案         | 不适用                          | Failed 或 Canceled 文案             | Paid 文案，Credits 已由 Webhook 写入                    |
-| Studio          | Quoting、Submitting  | 未获取 Quote 的初始状态         | 输入、上传、Provider 或预留错误     | Queued/Reconciliation required 提示；最终状态在 Account |
+| 页面            | Loading              | Empty                           | Error                               | Success/终态                                                         |
+| --------------- | -------------------- | ------------------------------- | ----------------------------------- | -------------------------------------------------------------------- |
+| Auth            | 提交按钮显示正在提交 | 不适用                          | 字段错误、认证服务错误、Google 错误 | 成功后跳转，注册确认可能显示成功提示                                 |
+| Account         | 服务端页面加载       | 无任务、无账本、无付款/订阅记录 | 部分账户记录无法读取                | 余额、任务、账本和支付状态可读                                       |
+| Checkout Return | Pending 文案         | 不适用                          | Failed 或 Canceled 文案             | Paid 文案，Credits 已由 Webhook 写入                                 |
+| Studio          | Quoting、Submitting  | 未获取 Quote 的初始状态         | 输入、上传、Provider 或预留错误     | Queued/Processing 自动刷新；成功时展示真实媒体，Account 保留 History |
 
 ## 响应式布局
 

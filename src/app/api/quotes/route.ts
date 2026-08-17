@@ -3,9 +3,11 @@ import { NextResponse } from "next/server";
 import { SupabaseCreditsRepository } from "@/db/credits-repository";
 import {
   GenerationInputError,
+  modelForModality,
   parseGenerationInput,
   toProviderSubmission,
 } from "@/domain/generation/modality-contract";
+import { selectableModelForInput } from "@/domain/generation/model-registry";
 import { createSupabaseServerClient } from "@/integrations/supabase/server";
 
 function quoteError(code: string, status: number) {
@@ -26,8 +28,24 @@ export async function POST(request: Request) {
   }
 
   let input;
+  let modelKey: string;
   try {
-    input = parseGenerationInput(await request.json());
+    const body = await request.json();
+    const requestBody =
+      body && typeof body === "object" && !Array.isArray(body)
+        ? (body as Record<string, unknown>)
+        : {};
+    input = parseGenerationInput(requestBody.input ?? body);
+    modelKey =
+      typeof requestBody.modelKey === "string"
+        ? requestBody.modelKey
+        : modelForModality(input.modality).key;
+    selectableModelForInput(
+      modelKey,
+      input.modality,
+      input.modality === "text_to_image" &&
+        input.referenceImageUrl !== undefined,
+    );
   } catch (error) {
     return quoteError(
       error instanceof GenerationInputError
@@ -38,7 +56,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const submission = toProviderSubmission(input);
+    const submission = toProviderSubmission(input, modelKey);
     const repository = new SupabaseCreditsRepository(supabase);
     const quote = await repository.createQuote({
       generationInput: input,

@@ -2,11 +2,22 @@ import { GenerateControl } from "@/features/studio/generate-control";
 import { getAuthenticatedUser } from "@/integrations/supabase/server";
 import { noIndexMetadata } from "@/lib/seo";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 export const metadata = noIndexMetadata;
 
-export default async function StudioPage() {
+export default async function StudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ task?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const task = Array.isArray(params.task) ? params.task[0] : params.task;
+  if (task) {
+    redirect(`/studio/result?task=${encodeURIComponent(task)}`);
+  }
+
   const { user } = await getAuthenticatedUser();
 
   return (

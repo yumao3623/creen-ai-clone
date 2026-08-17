@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import path from "node:path";
 
 const visualRoutes = [
   ["home", "/"],
@@ -57,6 +58,18 @@ test("studio tabs support keyboard navigation", async ({ page }) => {
   await expect(page.getByLabel("需要朗读的文本")).toBeVisible();
   await page.keyboard.press("Home");
   await expect(imageTab).toHaveAttribute("aria-selected", "true");
+});
+
+test("video reference selection shows a local preview", async ({ page }) => {
+  await page.goto("/studio");
+  await page.getByRole("tab", { name: /视频/ }).click();
+  await page
+    .getByLabel("参考图片")
+    .setInputFiles(
+      path.join(process.cwd(), "public/media/phase11-gallery-portrait.jpg"),
+    );
+  await expect(page.getByText("已选择", { exact: true })).toBeVisible();
+  await expect(page.locator(".uploadPreview")).toBeVisible();
 });
 
 test("reduced motion keeps the static media treatment", async ({ page }) => {

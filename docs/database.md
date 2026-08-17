@@ -1,6 +1,6 @@
 # Database / Core Domain
 
-状态：**Phase 5–8 已在远端执行；Phase 8 Stripe Sandbox 与 Credits/Ledger 对账 PASS**
+状态：**Phase 5–8 与多模型价格迁移已在远端执行；Stripe Sandbox、Credits/Ledger 与多模型价格核验 PASS**
 
 ## Migration
 
@@ -14,6 +14,8 @@
 - `submit_generation_task` RPC：以事务级 lock 和唯一约束串行化 `(actor, operation, client_key)`，同 Hash 返回既有 Task，不同 Hash 拒绝，并在同一事务创建 Task、Idempotency Record 与 Outbox Event。
 
 Phase 7 Credits 已在 `202608150004_phase7_credits.sql` 实现，详细事务与验收说明见 `credits.md`。`202608160002_phase8_stripe.sql` 实现 Phase 8 的 Checkout Command、Stripe Invoice/Event 幂等、状态时序保护与仅在 `invoice.paid` 中追加 Credit Lot/Ledger 的事务；真实 Sandbox 发现的函数列名解析与 Checkout 状态时序问题由 `202608160003`–`202608160005` 修复。上述 Phase 8 Migration 均已应用到远端项目，详情见 `stripe.md`。
+
+`202608180001_multimodel_prices.sql` 复用既有 `model_prices` Schema，为 Flux Dev、Flux Dev Image-to-Image、Kling V3 和 MiniMax Speech 2.8 Turbo 写入版本化价格，并让 `get_fal_webhook_context` 返回任务真实 `model_key`。该迁移已在远端应用，并通过 5 条备选价格记录查询核验。
 
 ## Phase 6 fal Webhook Receipt
 
